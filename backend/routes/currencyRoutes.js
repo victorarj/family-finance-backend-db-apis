@@ -27,4 +27,39 @@ router.get("/find", async (req, res) => {
   }
 });
 
+router.put("/update/:id", async (req, res) => {
+  const { id } = req.params;
+  const { codigo } = req.body;
+  try {
+    const result = await pool.query(
+      "UPDATE MOEDAS SET codigo = $1 WHERE id = $2 RETURNING *",
+      [codigo, id],
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Currency not found" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error updating currency: ", err);
+    res.status(500).json({ error: "database error" });
+  }
+});
+
+router.delete("/delete/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      "DELETE FROM MOEDAS WHERE id = $1 RETURNING *",
+      [id],
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Currency not found" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error deleting currency: ", err);
+    res.status(500).json({ error: "database error" });
+  }
+});
+
 export default router;

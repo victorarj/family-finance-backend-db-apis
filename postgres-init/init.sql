@@ -79,6 +79,10 @@ CREATE TABLE RESUMOS (
     total_receitas  DECIMAL(10,2) NOT NULL CHECK (total_receitas >= 0),
     saldo           DECIMAL(10,2) NOT NULL,
     data_resumo     DATE NOT NULL,
+    dono_resumo     VARCHAR(100) NOT NULL
+                        REFERENCES USUARIOS(email),
+    moeda           CHAR(3) NOT NULL
+                        REFERENCES MOEDAS(codigo),
     UNIQUE (nome_resumo)
 );
 
