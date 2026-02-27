@@ -102,3 +102,33 @@ CREATE TABLE DISTRIBUICOES (
                           REFERENCES MOEDAS(codigo),
     PRIMARY KEY (dono_distribuicao, nome_distribuicao)
 );
+
+-- Seed data
+INSERT INTO USUARIOS (nome, email, senha, telefone) VALUES
+    ('Admin User', 'admin@example.com', 'hashed_password_123', '1234567890');
+
+INSERT INTO CATEGORIAS (nome) VALUES
+    ('Alimentação'),
+    ('Transporte'),
+    ('Saúde'),
+    ('Educação'),
+    ('Entretenimento'),
+    ('Moradia'),
+    ('Utilidades'),
+    ('Outros');
+
+INSERT INTO PRIORIDADES (nome, nivel) VALUES
+    ('Baixa', 1),
+    ('Média', 2),
+    ('Alta', 3),
+    ('Crítica', 4);
+
+INSERT INTO MOEDAS (codigo) VALUES
+    ('USD'),
+    ('BRL'),
+    ('EUR'),
+    ('GBP');
+
+INSERT INTO CONTAS_BANCARIAS (nome_conta, dono_conta, banco, moeda) VALUES
+    ('Conta Principal', 'admin@example.com', 'Banco Brasil', 'BRL'),
+    ('Conta Dólares', 'admin@example.com', 'Banco Brasil', 'USD');
