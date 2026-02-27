@@ -17,10 +17,6 @@ pids
 *.seed
 *.pid.lock
 
-# Docker
-Dockerfile
-docker-compose.yml
-
 # Database
 postgres-init/*.sql
 
