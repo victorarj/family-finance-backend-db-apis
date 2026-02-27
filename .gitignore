@@ -17,8 +17,5 @@ pids
 *.seed
 *.pid.lock
 
-# Database
-postgres-init/*.sql
-
 # VSCode
 .vscode/
