@@ -1,0 +1,1163 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Finances API",
+    "description": "A comprehensive API for managing personal finances including users, expenses, recipes, bank accounts, categories, and more.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Finances API Support"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/users/create": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Create a new user",
+        "operationId": "createUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["nome", "email", "senha"],
+                "properties": {
+                  "nome": {
+                    "type": "string",
+                    "description": "User's full name",
+                    "example": "João Silva"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "User's email address",
+                    "example": "joao@example.com"
+                  },
+                  "senha": {
+                    "type": "string",
+                    "description": "User's password",
+                    "example": "senha123"
+                  },
+                  "telefone": {
+                    "type": "string",
+                    "description": "User's phone number",
+                    "example": "11999999999"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "nome": {
+                      "type": "string",
+                      "example": "João Silva"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "joao@example.com"
+                    },
+                    "telefone": {
+                      "type": "string",
+                      "example": "11999999999"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      }
+    },
+    "/users/find/{id}": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Find user by ID",
+        "operationId": "getUserById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "User ID",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "nome": {
+                      "type": "string",
+                      "example": "João Silva"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "joao@example.com"
+                    },
+                    "telefone": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not query users"
+          }
+        }
+      }
+    },
+    "/expenses/create": {
+      "post": {
+        "tags": ["Expenses"],
+        "summary": "Create a new expense",
+        "operationId": "createExpense",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nome",
+                  "valor_total",
+                  "valor_mensal",
+                  "numero_parcelas",
+                  "data_inicio",
+                  "data_fim",
+                  "categoria_id",
+                  "prioridade_id",
+                  "conta_bancaria_id",
+                  "dono_despesa",
+                  "moeda"
+                ],
+                "properties": {
+                  "nome": {
+                    "type": "string",
+                    "example": "Aluguel"
+                  },
+                  "valor_total": {
+                    "type": "number",
+                    "format": "decimal",
+                    "example": 1500.0
+                  },
+                  "valor_mensal": {
+                    "type": "number",
+                    "format": "decimal",
+                    "example": 1500.0
+                  },
+                  "numero_parcelas": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "data_inicio": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-02-26"
+                  },
+                  "data_fim": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-26"
+                  },
+                  "debito_bancario": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "categoria_id": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "prioridade_id": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "conta_bancaria_id": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "frequencia_pagamento": {
+                    "type": "string",
+                    "enum": ["mensal", "anual", "semanal"],
+                    "example": "mensal"
+                  },
+                  "descricao": {
+                    "type": "string",
+                    "example": "Aluguel do apartamento"
+                  },
+                  "tipo_despesa": {
+                    "type": "string",
+                    "example": "fixa"
+                  },
+                  "dono_despesa": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "joao@example.com"
+                  },
+                  "moeda": {
+                    "type": "string",
+                    "example": "BRL"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Expense created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "nome": {
+                      "type": "string"
+                    },
+                    "valor_total": {
+                      "type": "number"
+                    },
+                    "valor_mensal": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      }
+    },
+    "/expenses/find": {
+      "get": {
+        "tags": ["Expenses"],
+        "summary": "Get all expenses",
+        "operationId": "getAllExpenses",
+        "responses": {
+          "200": {
+            "description": "List of expenses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "nome": {
+                        "type": "string"
+                      },
+                      "valor_total": {
+                        "type": "number"
+                      },
+                      "valor_mensal": {
+                        "type": "number"
+                      },
+                      "dono_despesa": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not query database"
+          }
+        }
+      }
+    },
+    "/bank-accounts/create": {
+      "post": {
+        "tags": ["Bank Accounts"],
+        "summary": "Create a new bank account",
+        "operationId": "createBankAccount",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["nome_conta", "dono_conta", "banco", "moeda"],
+                "properties": {
+                  "nome_conta": {
+                    "type": "string",
+                    "example": "Conta Corrente"
+                  },
+                  "dono_conta": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "joao@example.com"
+                  },
+                  "banco": {
+                    "type": "string",
+                    "example": "Itaú"
+                  },
+                  "moeda": {
+                    "type": "string",
+                    "example": "BRL"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Bank account created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "nome_conta": {
+                      "type": "string"
+                    },
+                    "dono_conta": {
+                      "type": "string"
+                    },
+                    "banco": {
+                      "type": "string"
+                    },
+                    "moeda": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      }
+    },
+    "/bank-accounts/find": {
+      "get": {
+        "tags": ["Bank Accounts"],
+        "summary": "Get all bank accounts",
+        "operationId": "getAllBankAccounts",
+        "responses": {
+          "200": {
+            "description": "List of bank accounts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "nome_conta": {
+                        "type": "string"
+                      },
+                      "banco": {
+                        "type": "string"
+                      },
+                      "moeda": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not query database"
+          }
+        }
+      }
+    },
+    "/categories/create": {
+      "post": {
+        "tags": ["Categories"],
+        "summary": "Create a new category",
+        "operationId": "createCategory",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["nome"],
+                "properties": {
+                  "nome": {
+                    "type": "string",
+                    "example": "Alimentação"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "nome": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      }
+    },
+    "/categories/find": {
+      "get": {
+        "tags": ["Categories"],
+        "summary": "Get all categories",
+        "operationId": "getAllCategories",
+        "responses": {
+          "200": {
+            "description": "List of categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "nome": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not query categories"
+          }
+        }
+      }
+    },
+    "/currencies/create": {
+      "post": {
+        "tags": ["Currencies"],
+        "summary": "Create a new currency",
+        "operationId": "createCurrency",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["codigo"],
+                "properties": {
+                  "codigo": {
+                    "type": "string",
+                    "example": "BRL",
+                    "description": "ISO 4217 currency code"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Currency created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "codigo": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      }
+    },
+    "/currencies/find": {
+      "get": {
+        "tags": ["Currencies"],
+        "summary": "Get all currencies",
+        "operationId": "getAllCurrencies",
+        "responses": {
+          "200": {
+            "description": "List of currencies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "codigo": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not query currencies"
+          }
+        }
+      }
+    },
+    "/priorities/create": {
+      "post": {
+        "tags": ["Priorities"],
+        "summary": "Create a new priority",
+        "operationId": "createPriority",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["nome", "nivel"],
+                "properties": {
+                  "nome": {
+                    "type": "string",
+                    "example": "Alta"
+                  },
+                  "nivel": {
+                    "type": "integer",
+                    "example": 1,
+                    "description": "Priority level (must be >= 0)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Priority created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "nome": {
+                      "type": "string"
+                    },
+                    "nivel": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      }
+    },
+    "/priorities/find": {
+      "get": {
+        "tags": ["Priorities"],
+        "summary": "Get all priorities",
+        "operationId": "getAllPriorities",
+        "responses": {
+          "200": {
+            "description": "List of priorities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "nome": {
+                        "type": "string"
+                      },
+                      "nivel": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not query priorities"
+          }
+        }
+      }
+    },
+    "/recipes/create": {
+      "post": {
+        "tags": ["Recipes/Income"],
+        "summary": "Create a new recipe (income)",
+        "operationId": "createRecipe",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nome",
+                  "valor",
+                  "dono_receita",
+                  "data_recebimento",
+                  "moeda"
+                ],
+                "properties": {
+                  "nome": {
+                    "type": "string",
+                    "example": "Salário"
+                  },
+                  "valor": {
+                    "type": "number",
+                    "format": "decimal",
+                    "example": 5000.0
+                  },
+                  "dono_receita": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "joao@example.com"
+                  },
+                  "data_recebimento": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-02-26"
+                  },
+                  "descricao": {
+                    "type": "string",
+                    "example": "Salário mensal"
+                  },
+                  "moeda": {
+                    "type": "string",
+                    "example": "BRL"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Recipe created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "nome": {
+                      "type": "string"
+                    },
+                    "valor": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      }
+    },
+    "/recipes/find": {
+      "get": {
+        "tags": ["Recipes/Income"],
+        "summary": "Get all recipes (income)",
+        "operationId": "getAllRecipes",
+        "responses": {
+          "200": {
+            "description": "List of recipes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "nome": {
+                        "type": "string"
+                      },
+                      "valor": {
+                        "type": "number"
+                      },
+                      "dono_receita": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not query recipes"
+          }
+        }
+      }
+    },
+    "/resumes/create": {
+      "post": {
+        "tags": ["Resumes"],
+        "summary": "Create a new resume (summary)",
+        "operationId": "createResume",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nome_resumo",
+                  "total_despesas",
+                  "total_receitas",
+                  "saldo",
+                  "data_resumo"
+                ],
+                "properties": {
+                  "nome_resumo": {
+                    "type": "string",
+                    "example": "Fevereiro 2026"
+                  },
+                  "total_despesas": {
+                    "type": "number",
+                    "format": "decimal",
+                    "example": 2500.0
+                  },
+                  "total_receitas": {
+                    "type": "number",
+                    "format": "decimal",
+                    "example": 5000.0
+                  },
+                  "saldo": {
+                    "type": "number",
+                    "format": "decimal",
+                    "example": 2500.0
+                  },
+                  "data_resumo": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-02-26"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Resume created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "nome_resumo": {
+                      "type": "string"
+                    },
+                    "saldo": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      }
+    },
+    "/resumes/find": {
+      "get": {
+        "tags": ["Resumes"],
+        "summary": "Get all resumes (summaries)",
+        "operationId": "getAllResumes",
+        "responses": {
+          "200": {
+            "description": "List of resumes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "nome_resumo": {
+                        "type": "string"
+                      },
+                      "total_despesas": {
+                        "type": "number"
+                      },
+                      "total_receitas": {
+                        "type": "number"
+                      },
+                      "saldo": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not query resumes"
+          }
+        }
+      }
+    },
+    "/distributions/create": {
+      "post": {
+        "tags": ["Distributions"],
+        "summary": "Create a new distribution",
+        "operationId": "createDistribution",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "dono_distribuicao",
+                  "nome_distribuicao",
+                  "valor_distribuido",
+                  "data_distribuicao",
+                  "moeda"
+                ],
+                "properties": {
+                  "dono_distribuicao": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "joao@example.com"
+                  },
+                  "nome_distribuicao": {
+                    "type": "string",
+                    "example": "Distribuição Mensal"
+                  },
+                  "valor_distribuido": {
+                    "type": "number",
+                    "format": "decimal",
+                    "example": 1000.0
+                  },
+                  "data_distribuicao": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-02-26"
+                  },
+                  "moeda": {
+                    "type": "string",
+                    "example": "BRL"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Distribution created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "dono_distribuicao": {
+                      "type": "string"
+                    },
+                    "nome_distribuicao": {
+                      "type": "string"
+                    },
+                    "valor_distribuido": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      }
+    },
+    "/distributions/find": {
+      "get": {
+        "tags": ["Distributions"],
+        "summary": "Get all distributions",
+        "operationId": "getAllDistributions",
+        "responses": {
+          "200": {
+            "description": "List of distributions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "dono_distribuicao": {
+                        "type": "string"
+                      },
+                      "nome_distribuicao": {
+                        "type": "string"
+                      },
+                      "valor_distribuido": {
+                        "type": "number"
+                      },
+                      "moeda": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not query distributions"
+          }
+        }
+      }
+    },
+    "/taxes/create": {
+      "post": {
+        "tags": ["Taxes/Representativities"],
+        "summary": "Create a new tax (representativity)",
+        "operationId": "createTax",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nome_representatividade",
+                  "percentual",
+                  "dono_representatividade"
+                ],
+                "properties": {
+                  "nome_representatividade": {
+                    "type": "string",
+                    "example": "ISS"
+                  },
+                  "percentual": {
+                    "type": "number",
+                    "format": "decimal",
+                    "example": 5.0,
+                    "description": "Percentage value between 0 and 100"
+                  },
+                  "dono_representatividade": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "joao@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tax created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "nome_representatividade": {
+                      "type": "string"
+                    },
+                    "percentual": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      }
+    },
+    "/taxes/find": {
+      "get": {
+        "tags": ["Taxes/Representativities"],
+        "summary": "Get all taxes (representativities)",
+        "operationId": "getAllTaxes",
+        "responses": {
+          "200": {
+            "description": "List of taxes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "nome_representatividade": {
+                        "type": "string"
+                      },
+                      "percentual": {
+                        "type": "number"
+                      },
+                      "dono_representatividade": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not query taxes"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Users",
+      "description": "User management endpoints"
+    },
+    {
+      "name": "Expenses",
+      "description": "Expense tracking endpoints"
+    },
+    {
+      "name": "Bank Accounts",
+      "description": "Bank account management"
+    },
+    {
+      "name": "Categories",
+      "description": "Expense categories"
+    },
+    {
+      "name": "Currencies",
+      "description": "Currency codes"
+    },
+    {
+      "name": "Priorities",
+      "description": "Priority levels for expenses"
+    },
+    {
+      "name": "Recipes/Income",
+      "description": "Income/receipt management (RECEITAS)"
+    },
+    {
+      "name": "Resumes",
+      "description": "Financial summaries"
+    },
+    {
+      "name": "Distributions",
+      "description": "Fund distribution management"
+    },
+    {
+      "name": "Taxes/Representativities",
+      "description": "Taxes and representativities"
+    }
+  ]
+}
