@@ -3,7 +3,7 @@ import pool from "../db.js";
 
 const router = express.Router();
 
-router.post("/create", async (req, res) => {
+router.post("/", async (req, res) => {
   const { nome_representatividade, percentual, dono_representatividade } =
     req.body;
   try {
@@ -23,7 +23,7 @@ router.post("/create", async (req, res) => {
   }
 });
 
-router.get("/find", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const now = await pool.query("SELECT * FROM REPRESENTATIVIDADES");
     res.json(now.rows);
@@ -33,7 +33,7 @@ router.get("/find", async (req, res) => {
   }
 });
 
-router.get("/find/:dono_representatividade", async (req, res) => {
+router.get("/:dono_representatividade", async (req, res) => {
   try {
     const now = await pool.query(
       "SELECT * FROM REPRESENTATIVIDADES WHERE dono_representatividade = $1",
@@ -46,7 +46,7 @@ router.get("/find/:dono_representatividade", async (req, res) => {
   }
 });
 
-router.put("/update/:id", async (req, res) => {
+router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { nome_representatividade, percentual, dono_representatividade } =
     req.body;
@@ -65,7 +65,7 @@ router.put("/update/:id", async (req, res) => {
   }
 });
 
-router.delete("/delete/:id", async (req, res) => {
+router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const result = await pool.query(

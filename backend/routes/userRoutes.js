@@ -3,7 +3,7 @@ import pool from "../db.js";
 
 const router = express.Router();
 
-router.post("/create", async (req, res) => {
+router.post("/", async (req, res) => {
   const { nome, email, senha, telefone } = req.body;
   try {
     const result = await pool.query(
@@ -17,7 +17,7 @@ router.post("/create", async (req, res) => {
   }
 });
 
-router.get("/find", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const now = await pool.query("SELECT * FROM USUARIOS");
     res.json(now.rows);
@@ -27,7 +27,7 @@ router.get("/find", async (req, res) => {
   }
 });
 
-router.get("/find/:id", async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
     const now = await pool.query("SELECT * FROM USUARIOS WHERE id = $1", [
       req.params.id,
@@ -39,7 +39,7 @@ router.get("/find/:id", async (req, res) => {
   }
 });
 
-router.put("/update/:id", async (req, res) => {
+router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { nome, email, senha, telefone } = req.body;
   try {
@@ -57,7 +57,7 @@ router.put("/update/:id", async (req, res) => {
   }
 });
 
-router.delete("/delete/:id", async (req, res) => {
+router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const result = await pool.query(
