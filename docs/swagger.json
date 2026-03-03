@@ -15,9 +15,9 @@
     }
   ],
   "paths": {
-    "/users/create": {
+    "/public/": {
       "post": {
-        "tags": ["Users"],
+        "tags": ["Public"],
         "summary": "Create a new user",
         "operationId": "createUser",
         "requestBody": {
@@ -89,11 +89,87 @@
         }
       }
     },
+    "/public/login": {
+      "post": {
+        "tags": ["Public"],
+        "summary": "User login",
+        "operationId": "loginUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "senha"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "User's email address",
+                    "example": "joao@example.com"
+                  },
+                  "senha": {
+                    "type": "string",
+                    "description": "User's password",
+                    "example": "senha123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User logged in successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "example": "your-jwt-token"
+                    },
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "nome": {
+                      "type": "string",
+                      "example": "João Silva"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "joao@example.com"
+                    },
+                    "telefone": {
+                      "type": "string",
+                      "example": "11999999999"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid email or password"
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      }
+    },
     "/users/find/{id}": {
       "get": {
         "tags": ["Users"],
         "summary": "Find user by ID",
         "operationId": "getUserById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -145,6 +221,11 @@
         "tags": ["Expenses"],
         "summary": "Create a new expense",
         "operationId": "createExpense",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -272,6 +353,11 @@
         "tags": ["Expenses"],
         "summary": "Get all expenses",
         "operationId": "getAllExpenses",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of expenses",
@@ -314,6 +400,11 @@
         "tags": ["Bank Accounts"],
         "summary": "Create a new bank account",
         "operationId": "createBankAccount",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -383,6 +474,11 @@
         "tags": ["Bank Accounts"],
         "summary": "Get all bank accounts",
         "operationId": "getAllBankAccounts",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of bank accounts",
@@ -422,6 +518,11 @@
         "tags": ["Categories"],
         "summary": "Create a new category",
         "operationId": "createCategory",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -469,6 +570,11 @@
         "tags": ["Categories"],
         "summary": "Get all categories",
         "operationId": "getAllCategories",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of categories",
@@ -502,6 +608,11 @@
         "tags": ["Currencies"],
         "summary": "Create a new currency",
         "operationId": "createCurrency",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -547,6 +658,11 @@
         "tags": ["Currencies"],
         "summary": "Get all currencies",
         "operationId": "getAllCurrencies",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of currencies",
@@ -577,6 +693,11 @@
         "tags": ["Priorities"],
         "summary": "Create a new priority",
         "operationId": "createPriority",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -632,6 +753,11 @@
         "tags": ["Priorities"],
         "summary": "Get all priorities",
         "operationId": "getAllPriorities",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of priorities",
@@ -668,6 +794,11 @@
         "tags": ["Recipes/Income"],
         "summary": "Create a new recipe (income)",
         "operationId": "createRecipe",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -747,6 +878,11 @@
         "tags": ["Recipes/Income"],
         "summary": "Get all recipes (income)",
         "operationId": "getAllRecipes",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of recipes",
@@ -786,6 +922,11 @@
         "tags": ["Resumes"],
         "summary": "Create a new resume (summary)",
         "operationId": "createResume",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -862,6 +1003,11 @@
         "tags": ["Resumes"],
         "summary": "Get all resumes (summaries)",
         "operationId": "getAllResumes",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of resumes",
@@ -904,6 +1050,11 @@
         "tags": ["Distributions"],
         "summary": "Create a new distribution",
         "operationId": "createDistribution",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -979,6 +1130,11 @@
         "tags": ["Distributions"],
         "summary": "Get all distributions",
         "operationId": "getAllDistributions",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of distributions",
@@ -1018,6 +1174,11 @@
         "tags": ["Taxes/Representativities"],
         "summary": "Create a new tax (representativity)",
         "operationId": "createTax",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1083,6 +1244,11 @@
         "tags": ["Taxes/Representativities"],
         "summary": "Get all taxes (representativities)",
         "operationId": "getAllTaxes",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of taxes",
@@ -1118,7 +1284,20 @@
       }
     }
   },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
   "tags": [
+    {
+      "name": "Public",
+      "description": "Public endpoints"
+    },
     {
       "name": "Users",
       "description": "User management endpoints"

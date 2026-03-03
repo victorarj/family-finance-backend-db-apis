@@ -8,27 +8,28 @@ This document contains practical examples for all API endpoints. You can use the
 
 ## 📋 Table of Contents
 
-1. [Users](#users)
-2. [Expenses](#expenses)
-3. [Bank Accounts](#bank-accounts)
-4. [Categories](#categories)
-5. [Currencies](#currencies)
-6. [Priorities](#priorities)
-7. [Recipes (Income)](#recipes-income)
-8. [Resumes](#resumes)
-9. [Distributions](#distributions)
-10. [Taxes/Representativities](#taxesrepresentativities)
+1. [Public](#public)
+2. [Users](#users)
+3. [Expenses](#expenses)
+4. [Bank Accounts](#bank-accounts)
+5. [Categories](#categories)
+6. [Currencies](#currencies)
+7. [Priorities](#priorities)
+8. [Recipes (Income)](#recipes-income)
+9. [Resumes](#resumes)
+10. [Distributions](#distributions)
+11. [Taxes/Representativities](#taxesrepresentativities)
 
 ---
 
-## Users
+## Public
 
 ### Create User
 
 **Request:**
 
 ```bash
-curl -X POST http://localhost:3000/users/create \
+curl -X POST http://localhost:3000/public/ \
   -H "Content-Type: application/json" \
   -d '{
     "nome": "João Silva",
@@ -41,7 +42,7 @@ curl -X POST http://localhost:3000/users/create \
 **JavaScript/Fetch:**
 
 ```javascript
-fetch("http://localhost:3000/users/create", {
+fetch("http://localhost:3000/public/", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -66,20 +67,67 @@ fetch("http://localhost:3000/users/create", {
 }
 ```
 
+### Login
+
+**Request:**
+
+```bash
+curl -X POST http://localhost:3000/public/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "joao@example.com",
+    "senha": "senha123"
+  }'
+```
+
+**JavaScript/Fetch:**
+
+```javascript
+fetch("http://localhost:3000/public/login", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    email: "joao@example.com",
+    senha: "senha123",
+  }),
+})
+  .then((res) => res.json())
+  .then((data) => console.log(data));
+```
+
+**Response (200):**
+
+```json
+{
+  "token": "your-jwt-token",
+  "id": 1,
+  "nome": "João Silva",
+  "email": "joao@example.com",
+  "telefone": "11999999999"
+}
+```
+
 ---
+
+## Users
 
 ### Find User by ID
 
 **Request:**
 
 ```bash
-curl http://localhost:3000/users/find/1
+curl http://localhost:3000/users/find/1 \
+  -H "Authorization: Bearer your-jwt-token"
 ```
 
 **JavaScript/Fetch:**
 
 ```javascript
-fetch("http://localhost:3000/users/find/1")
+fetch("http://localhost:3000/users/find/1", {
+  headers: {
+    "Authorization": "Bearer your-jwt-token"
+  }
+})
   .then((res) => res.json())
   .then((data) => console.log(data));
 ```
@@ -107,6 +155,7 @@ fetch("http://localhost:3000/users/find/1")
 ```bash
 curl -X POST http://localhost:3000/expenses/create \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-jwt-token" \
   -d '{
     "nome": "Aluguel",
     "valor_total": 1500.00,
@@ -131,7 +180,10 @@ curl -X POST http://localhost:3000/expenses/create \
 ```javascript
 fetch("http://localhost:3000/expenses/create", {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer your-jwt-token"
+  },
   body: JSON.stringify({
     nome: "Aluguel",
     valor_total: 1500.0,
@@ -184,13 +236,18 @@ fetch("http://localhost:3000/expenses/create", {
 **Request:**
 
 ```bash
-curl http://localhost:3000/expenses/find
+curl http://localhost:3000/expenses/find \
+  -H "Authorization: Bearer your-jwt-token"
 ```
 
 **JavaScript/Fetch:**
 
 ```javascript
-fetch("http://localhost:3000/expenses/find")
+fetch("http://localhost:3000/expenses/find", {
+  headers: {
+    "Authorization": "Bearer your-jwt-token"
+  }
+})
   .then((res) => res.json())
   .then((data) => console.log(data));
 ```
@@ -227,6 +284,7 @@ fetch("http://localhost:3000/expenses/find")
 ```bash
 curl -X POST http://localhost:3000/bank-accounts/create \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-jwt-token" \
   -d '{
     "nome_conta": "Conta Corrente",
     "dono_conta": "joao@example.com",
@@ -240,7 +298,10 @@ curl -X POST http://localhost:3000/bank-accounts/create \
 ```javascript
 fetch("http://localhost:3000/bank-accounts/create", {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer your-jwt-token"
+  },
   body: JSON.stringify({
     nome_conta: "Conta Corrente",
     dono_conta: "joao@example.com",
@@ -271,13 +332,18 @@ fetch("http://localhost:3000/bank-accounts/create", {
 **Request:**
 
 ```bash
-curl http://localhost:3000/bank-accounts/find
+curl http://localhost:3000/bank-accounts/find \
+  -H "Authorization: Bearer your-jwt-token"
 ```
 
 **JavaScript/Fetch:**
 
 ```javascript
-fetch("http://localhost:3000/bank-accounts/find")
+fetch("http://localhost:3000/bank-accounts/find", {
+  headers: {
+    "Authorization": "Bearer your-jwt-token"
+  }
+})
   .then((res) => res.json())
   .then((data) => console.log(data));
 ```
@@ -314,6 +380,7 @@ fetch("http://localhost:3000/bank-accounts/find")
 ```bash
 curl -X POST http://localhost:3000/categories/create \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-jwt-token" \
   -d '{
     "nome": "Alimentação"
   }'
@@ -324,7 +391,10 @@ curl -X POST http://localhost:3000/categories/create \
 ```javascript
 fetch("http://localhost:3000/categories/create", {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer your-jwt-token"
+  },
   body: JSON.stringify({
     nome: "Alimentação",
   }),
@@ -349,13 +419,18 @@ fetch("http://localhost:3000/categories/create", {
 **Request:**
 
 ```bash
-curl http://localhost:3000/categories/find
+curl http://localhost:3000/categories/find \
+  -H "Authorization: Bearer your-jwt-token"
 ```
 
 **JavaScript/Fetch:**
 
 ```javascript
-fetch("http://localhost:3000/categories/find")
+fetch("http://localhost:3000/categories/find", {
+  headers: {
+    "Authorization": "Bearer your-jwt-token"
+  }
+})
   .then((res) => res.json())
   .then((data) => console.log(data));
 ```
@@ -390,6 +465,7 @@ fetch("http://localhost:3000/categories/find")
 ```bash
 curl -X POST http://localhost:3000/currencies/create \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-jwt-token" \
   -d '{
     "codigo": "BRL"
   }'
@@ -400,7 +476,10 @@ curl -X POST http://localhost:3000/currencies/create \
 ```javascript
 fetch("http://localhost:3000/currencies/create", {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer your-jwt-token"
+  },
   body: JSON.stringify({
     codigo: "BRL",
   }),
@@ -424,13 +503,18 @@ fetch("http://localhost:3000/currencies/create", {
 **Request:**
 
 ```bash
-curl http://localhost:3000/currencies/find
+curl http://localhost:3000/currencies/find \
+  -H "Authorization: Bearer your-jwt-token"
 ```
 
 **JavaScript/Fetch:**
 
 ```javascript
-fetch("http://localhost:3000/currencies/find")
+fetch("http://localhost:3000/currencies/find", {
+  headers: {
+    "Authorization": "Bearer your-jwt-token"
+  }
+})
   .then((res) => res.json())
   .then((data) => console.log(data));
 ```
@@ -462,6 +546,7 @@ fetch("http://localhost:3000/currencies/find")
 ```bash
 curl -X POST http://localhost:3000/priorities/create \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-jwt-token" \
   -d '{
     "nome": "Alta",
     "nivel": 1
@@ -473,7 +558,10 @@ curl -X POST http://localhost:3000/priorities/create \
 ```javascript
 fetch("http://localhost:3000/priorities/create", {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer your-jwt-token"
+  },
   body: JSON.stringify({
     nome: "Alta",
     nivel: 1,
@@ -500,13 +588,18 @@ fetch("http://localhost:3000/priorities/create", {
 **Request:**
 
 ```bash
-curl http://localhost:3000/priorities/find
+curl http://localhost:3000/priorities/find \
+  -H "Authorization: Bearer your-jwt-token"
 ```
 
 **JavaScript/Fetch:**
 
 ```javascript
-fetch("http://localhost:3000/priorities/find")
+fetch("http://localhost:3000/priorities/find", {
+  headers: {
+    "Authorization": "Bearer your-jwt-token"
+  }
+})
   .then((res) => res.json())
   .then((data) => console.log(data));
 ```
@@ -544,6 +637,7 @@ fetch("http://localhost:3000/priorities/find")
 ```bash
 curl -X POST http://localhost:3000/recipes/create \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-jwt-token" \
   -d '{
     "nome": "Salário",
     "valor": 5000.00,
@@ -559,7 +653,10 @@ curl -X POST http://localhost:3000/recipes/create \
 ```javascript
 fetch("http://localhost:3000/recipes/create", {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer your-jwt-token"
+  },
   body: JSON.stringify({
     nome: "Salário",
     valor: 5000.0,
@@ -594,13 +691,18 @@ fetch("http://localhost:3000/recipes/create", {
 **Request:**
 
 ```bash
-curl http://localhost:3000/recipes/find
+curl http://localhost:3000/recipes/find \
+  -H "Authorization: Bearer your-jwt-token"
 ```
 
 **JavaScript/Fetch:**
 
 ```javascript
-fetch("http://localhost:3000/recipes/find")
+fetch("http://localhost:3000/recipes/find", {
+  headers: {
+    "Authorization": "Bearer your-jwt-token"
+  }
+})
   .then((res) => res.json())
   .then((data) => console.log(data));
 ```
@@ -637,6 +739,7 @@ fetch("http://localhost:3000/recipes/find")
 ```bash
 curl -X POST http://localhost:3000/resumes/create \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-jwt-token" \
   -d '{
     "nome_resumo": "Fevereiro 2026",
     "total_despesas": 2500.00,
@@ -651,7 +754,10 @@ curl -X POST http://localhost:3000/resumes/create \
 ```javascript
 fetch("http://localhost:3000/resumes/create", {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer your-jwt-token"
+  },
   body: JSON.stringify({
     nome_resumo: "Fevereiro 2026",
     total_despesas: 2500.0,
@@ -684,13 +790,18 @@ fetch("http://localhost:3000/resumes/create", {
 **Request:**
 
 ```bash
-curl http://localhost:3000/resumes/find
+curl http://localhost:3000/resumes/find \
+  -H "Authorization: Bearer your-jwt-token"
 ```
 
 **JavaScript/Fetch:**
 
 ```javascript
-fetch("http://localhost:3000/resumes/find")
+fetch("http://localhost:3000/resumes/find", {
+  headers: {
+    "Authorization": "Bearer your-jwt-token"
+  }
+})
   .then((res) => res.json())
   .then((data) => console.log(data));
 ```
@@ -729,6 +840,7 @@ fetch("http://localhost:3000/resumes/find")
 ```bash
 curl -X POST http://localhost:3000/distributions/create \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-jwt-token" \
   -d '{
     "dono_distribuicao": "joao@example.com",
     "nome_distribuicao": "Distribuição Mensal",
@@ -743,7 +855,10 @@ curl -X POST http://localhost:3000/distributions/create \
 ```javascript
 fetch("http://localhost:3000/distributions/create", {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer your-jwt-token"
+  },
   body: JSON.stringify({
     dono_distribuicao: "joao@example.com",
     nome_distribuicao: "Distribuição Mensal",
@@ -775,13 +890,18 @@ fetch("http://localhost:3000/distributions/create", {
 **Request:**
 
 ```bash
-curl http://localhost:3000/distributions/find
+curl http://localhost:3000/distributions/find \
+  -H "Authorization: Bearer your-jwt-token"
 ```
 
 **JavaScript/Fetch:**
 
 ```javascript
-fetch("http://localhost:3000/distributions/find")
+fetch("http://localhost:3000/distributions/find", {
+  headers: {
+    "Authorization": "Bearer your-jwt-token"
+  }
+})
   .then((res) => res.json())
   .then((data) => console.log(data));
 ```
@@ -818,6 +938,7 @@ fetch("http://localhost:3000/distributions/find")
 ```bash
 curl -X POST http://localhost:3000/taxes/create \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-jwt-token" \
   -d '{
     "nome_representatividade": "ISS",
     "percentual": 5.00,
@@ -830,7 +951,10 @@ curl -X POST http://localhost:3000/taxes/create \
 ```javascript
 fetch("http://localhost:3000/taxes/create", {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer your-jwt-token"
+  },
   body: JSON.stringify({
     nome_representatividade: "ISS",
     percentual: 5.0,
@@ -859,13 +983,18 @@ fetch("http://localhost:3000/taxes/create", {
 **Request:**
 
 ```bash
-curl http://localhost:3000/taxes/find
+curl http://localhost:3000/taxes/find \
+  -H "Authorization: Bearer your-jwt-token"
 ```
 
 **JavaScript/Fetch:**
 
 ```javascript
-fetch("http://localhost:3000/taxes/find")
+fetch("http://localhost:3000/taxes/find", {
+  headers: {
+    "Authorization": "Bearer your-jwt-token"
+  }
+})
   .then((res) => res.json())
   .then((data) => console.log(data));
 ```
@@ -908,4 +1037,4 @@ Copy the fetch examples into your browser console or Node.js environment to test
 
 ---
 
-**Last Updated:** February 26, 2026
+**Last Updated:** March 3, 2026
