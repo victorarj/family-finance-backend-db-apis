@@ -6,11 +6,12 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   const { codigo } = req.body;
   try {
+    const normalized = String(codigo || "").toUpperCase();
     const result = await pool.query(
-      "INSERT INTO MOEDAS (codigo) VALUES ($1) RETURNING id",
-      [codigo],
+      "INSERT INTO MOEDAS (codigo) VALUES ($1) RETURNING codigo",
+      [normalized],
     );
-    res.status(201).json({ codigo: result.rows[0].codigo, codigo });
+    res.status(201).json({ codigo: result.rows[0].codigo });
   } catch (err) {
     console.error("Error creating currency: ", err);
     res.status(500).json({ error: "database error" });
@@ -19,7 +20,7 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const now = await pool.query("SELECT * FROM MOEDAS");
+    const now = await pool.query("SELECT * FROM MOEDAS ORDER BY codigo");
     res.json(now.rows);
   } catch (err) {
     console.error(err);
@@ -27,13 +28,13 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
-  const { id } = req.params;
-  const { codigo } = req.body;
+router.put("/:codigo", async (req, res) => {
+  const { codigo } = req.params;
+  const { novo_codigo } = req.body;
   try {
     const result = await pool.query(
-      "UPDATE MOEDAS SET codigo = $1 WHERE id = $2 RETURNING *",
-      [codigo, id],
+      "UPDATE MOEDAS SET codigo = $1 WHERE codigo = $2 RETURNING *",
+      [String(novo_codigo || "").toUpperCase(), String(codigo).toUpperCase()],
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Currency not found" });
@@ -45,12 +46,12 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
-  const { id } = req.params;
+router.delete("/:codigo", async (req, res) => {
+  const { codigo } = req.params;
   try {
     const result = await pool.query(
-      "DELETE FROM MOEDAS WHERE id = $1 RETURNING *",
-      [id],
+      "DELETE FROM MOEDAS WHERE codigo = $1 RETURNING *",
+      [String(codigo).toUpperCase()],
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Currency not found" });

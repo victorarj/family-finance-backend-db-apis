@@ -12,6 +12,14 @@ import priorityRoutes from "./routes/priorityRoutes.js";
 import expensesRoutes from "./routes/expensesRoutes.js";
 import bankAccountRoutes from "./routes/bankAccountRoutes.js";
 import distributionRoutes from "./routes/distributionRoutes.js";
+import preferencesRoutes from "./routes/preferencesRoutes.js";
+import recurringRoutes from "./routes/recurringRoutes.js";
+import monthlyBudgetsRoutes from "./routes/monthlyBudgetsRoutes.js";
+import planningRoutes from "./routes/planningRoutes.js";
+import monthlySnapshotsRoutes from "./routes/monthlySnapshotsRoutes.js";
+import surplusAllocationsRoutes from "./routes/surplusAllocationsRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
+import transactionsRoutes from "./routes/transactionsRoutes.js";
 
 dotenv.config();
 
@@ -28,8 +36,17 @@ app.use("/currencies", auth, currencyRoutes);
 app.use("/distributions", auth, distributionRoutes);
 app.use("/priorities", auth, priorityRoutes);
 app.use("/recipes", auth, recipeRoutes);
+app.use("/income", auth, recipeRoutes);
 app.use("/resumes", auth, resumeRoutes);
 app.use("/expenses", auth, expensesRoutes);
+app.use("/preferences", auth, preferencesRoutes);
+app.use("/recurring", auth, recurringRoutes);
+app.use("/monthly-budgets", auth, monthlyBudgetsRoutes);
+app.use("/planning", auth, planningRoutes);
+app.use("/monthly-snapshots", auth, monthlySnapshotsRoutes);
+app.use("/surplus-allocations", auth, surplusAllocationsRoutes);
+app.use("/dashboard", auth, dashboardRoutes);
+app.use("/transactions", auth, transactionsRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

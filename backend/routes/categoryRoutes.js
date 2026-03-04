@@ -19,7 +19,10 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const now = await pool.query("SELECT * FROM CATEGORIAS");
+    const includeInactive = req.query.include_inactive === "true";
+    const now = includeInactive
+      ? await pool.query("SELECT * FROM CATEGORIAS ORDER BY nome")
+      : await pool.query("SELECT * FROM CATEGORIAS WHERE ativo = TRUE ORDER BY nome");
     res.json(now.rows);
   } catch (err) {
     console.error(err);
@@ -49,7 +52,7 @@ router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const result = await pool.query(
-      "DELETE FROM CATEGORIAS WHERE id = $1 RETURNING *",
+      "UPDATE CATEGORIAS SET ativo = FALSE WHERE id = $1 RETURNING *",
       [id],
     );
     if (result.rows.length === 0) {

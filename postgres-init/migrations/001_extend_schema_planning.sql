@@ -1,0 +1,80 @@
+-- Phase 1 migration: extend existing schema without replacing legacy tables.
+
+BEGIN;
+
+ALTER TABLE USUARIOS
+  ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMP NULL,
+  ADD COLUMN IF NOT EXISTS last_transaction_date DATE NULL,
+  ADD COLUMN IF NOT EXISTS planning_completed_at TIMESTAMP NULL;
+
+ALTER TABLE CATEGORIAS
+  ADD COLUMN IF NOT EXISTS ativo BOOLEAN NOT NULL DEFAULT TRUE;
+
+CREATE TABLE IF NOT EXISTS PREFERENCIAS_USUARIO (
+  id SERIAL PRIMARY KEY,
+  usuario_id INT NOT NULL UNIQUE REFERENCES USUARIOS(id) ON DELETE CASCADE,
+  tipo_residencia VARCHAR(50) NOT NULL,
+  modo_registro VARCHAR(30) NOT NULL CHECK (modo_registro IN ('despesas', 'completo')),
+  planejamento_guiado BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS TRANSACOES_RECORRENTES (
+  id SERIAL PRIMARY KEY,
+  usuario_id INT NOT NULL REFERENCES USUARIOS(id) ON DELETE CASCADE,
+  categoria_id INT NULL REFERENCES CATEGORIAS(id),
+  tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('income', 'expense')),
+  descricao VARCHAR(255) NOT NULL,
+  valor DECIMAL(10,2) NOT NULL CHECK (valor >= 0),
+  frequencia VARCHAR(20) NOT NULL CHECK (frequencia IN ('mensal')),
+  ativo BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS ORCAMENTOS_MENSAIS (
+  id SERIAL PRIMARY KEY,
+  usuario_id INT NOT NULL REFERENCES USUARIOS(id) ON DELETE CASCADE,
+  mes CHAR(7) NOT NULL CHECK (mes ~ '^[0-9]{4}-[0-9]{2}$'),
+  categoria_id INT NOT NULL REFERENCES CATEGORIAS(id),
+  valor_planejado DECIMAL(10,2) NOT NULL CHECK (valor_planejado >= 0),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE (usuario_id, mes, categoria_id)
+);
+
+CREATE TABLE IF NOT EXISTS SNAPSHOTS_MENSAIS (
+  id SERIAL PRIMARY KEY,
+  usuario_id INT NOT NULL REFERENCES USUARIOS(id) ON DELETE CASCADE,
+  mes CHAR(7) NOT NULL CHECK (mes ~ '^[0-9]{4}-[0-9]{2}$'),
+  total_receitas DECIMAL(10,2) NOT NULL,
+  total_fixas DECIMAL(10,2) NOT NULL,
+  total_variaveis DECIMAL(10,2) NOT NULL,
+  saldo_projetado DECIMAL(10,2) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE (usuario_id, mes)
+);
+
+CREATE TABLE IF NOT EXISTS ALOCACOES_SUPERAVIT (
+  id SERIAL PRIMARY KEY,
+  usuario_id INT NOT NULL REFERENCES USUARIOS(id) ON DELETE CASCADE,
+  mes CHAR(7) NOT NULL CHECK (mes ~ '^[0-9]{4}-[0-9]{2}$'),
+  tipo_alocacao VARCHAR(40) NOT NULL,
+  valor DECIMAL(10,2) NOT NULL CHECK (valor >= 0),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_orcamentos_usuario_mes
+  ON ORCAMENTOS_MENSAIS(usuario_id, mes);
+
+CREATE INDEX IF NOT EXISTS idx_snapshots_usuario_mes
+  ON SNAPSHOTS_MENSAIS(usuario_id, mes);
+
+CREATE INDEX IF NOT EXISTS idx_alocacoes_usuario_mes
+  ON ALOCACOES_SUPERAVIT(usuario_id, mes);
+
+CREATE INDEX IF NOT EXISTS idx_recorrentes_usuario
+  ON TRANSACOES_RECORRENTES(usuario_id);
+
+COMMIT;
