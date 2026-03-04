@@ -69,6 +69,13 @@ router.post("/", async (req, res) => {
     const totalFixas = req.body.total_fixas ?? computed.totalFixas;
     const totalVariaveis = req.body.total_variaveis ?? computed.totalVariaveis;
     const saldoProjetado = req.body.saldo_projetado ?? computed.saldoProjetado;
+    const confirmNegative = req.body.confirm_negative === true;
+    if (Number(saldoProjetado) <= 0 && !confirmNegative) {
+      return res.status(409).json({
+        error:
+          "Your projected balance is negative or zero. Are you sure you want to confirm planning?",
+      });
+    }
     const result = await pool.query(
       "INSERT INTO SNAPSHOTS_MENSAIS (usuario_id, mes, total_receitas, total_fixas, total_variaveis, saldo_projetado) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
       [auth.id, mes, totalReceitas, totalFixas, totalVariaveis, saldoProjetado],

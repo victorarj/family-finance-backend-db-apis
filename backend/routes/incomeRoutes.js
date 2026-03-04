@@ -20,7 +20,7 @@ router.post("/", async (req, res) => {
     );
     res.status(201).json({ ...result.rows[0], locked: false });
   } catch (err) {
-    console.error("Error creating recipe: ", err);
+    console.error("Error creating income: ", err);
     res.status(err.statusCode || 500).json({ error: err.message || "database error" });
   }
 });
@@ -42,7 +42,7 @@ router.get("/", async (req, res) => {
     );
   } catch (err) {
     console.error(err);
-    res.status(500).send("could not query recipes.");
+    res.status(500).send("could not query incomes.");
   }
 });
 
@@ -66,7 +66,7 @@ router.get("/:dono_receita", async (req, res) => {
     );
   } catch (err) {
     console.error(err);
-    res.status(500).send("could not query recipes.");
+    res.status(500).send("could not query incomes.");
   }
 });
 
@@ -80,7 +80,7 @@ router.put("/:id", async (req, res) => {
       [id],
     );
     if (existing.rows.length === 0) {
-      return res.status(404).json({ error: "Recipe not found" });
+      return res.status(404).json({ error: "Income not found" });
     }
     if (existing.rows[0].dono_receita !== auth.email) {
       return res.status(403).json({ error: "forbidden" });
@@ -93,7 +93,7 @@ router.put("/:id", async (req, res) => {
     );
     res.json({ ...result.rows[0], locked: false });
   } catch (err) {
-    console.error("Error updating recipe: ", err);
+    console.error("Error updating income: ", err);
     res.status(err.statusCode || 500).json({ error: err.message || "database error" });
   }
 });
@@ -107,7 +107,7 @@ router.delete("/:id", async (req, res) => {
       [id],
     );
     if (existing.rows.length === 0) {
-      return res.status(404).json({ error: "Recipe not found" });
+      return res.status(404).json({ error: "Income not found" });
     }
     if (existing.rows[0].dono_receita !== auth.email) {
       return res.status(403).json({ error: "forbidden" });
@@ -119,7 +119,7 @@ router.delete("/:id", async (req, res) => {
     );
     res.json({ ...result.rows[0], locked: false });
   } catch (err) {
-    console.error("Error deleting recipe: ", err);
+    console.error("Error deleting income: ", err);
     res.status(err.statusCode || 500).json({ error: err.message || "database error" });
   }
 });
