@@ -2,6 +2,7 @@ import express from "express";
 import pool from "../db.js";
 import { resolveAuthUser } from "../services/authUser.js";
 import { deriveMonthStatus } from "../services/planningService.js";
+import { getProjectionDataForMonth } from "../services/projectionService.js";
 
 const router = express.Router();
 
@@ -10,26 +11,11 @@ function currentMonth() {
 }
 
 async function computeSnapshotData(user, mes) {
-  const income = await pool.query(
-    "SELECT COALESCE(SUM(valor),0) AS total FROM RECEITAS WHERE dono_receita = $1 AND to_char(data_recebimento, 'YYYY-MM') = $2",
-    [user.email, mes],
-  );
-  const recurringIncome = await pool.query(
-    "SELECT COALESCE(SUM(valor),0) AS total FROM TRANSACOES_RECORRENTES WHERE usuario_id = $1 AND ativo = TRUE AND tipo = 'income'",
-    [user.id],
-  );
-  const recurringExpense = await pool.query(
-    "SELECT COALESCE(SUM(valor),0) AS total FROM TRANSACOES_RECORRENTES WHERE usuario_id = $1 AND ativo = TRUE AND tipo = 'expense'",
-    [user.id],
-  );
-  const budgets = await pool.query(
-    "SELECT COALESCE(SUM(valor_planejado),0) AS total FROM ORCAMENTOS_MENSAIS WHERE usuario_id = $1 AND mes = $2",
-    [user.id, mes],
-  );
-  const totalReceitas = Number(income.rows[0].total) + Number(recurringIncome.rows[0].total);
-  const totalFixas = Number(recurringExpense.rows[0].total);
-  const totalVariaveis = Number(budgets.rows[0].total);
-  const saldoProjetado = totalReceitas - totalFixas - totalVariaveis;
+  const projection = await getProjectionDataForMonth(user, mes);
+  const totalReceitas = projection.totalIncome;
+  const totalFixas = projection.fixedExpenses;
+  const totalVariaveis = projection.plannedVariable;
+  const saldoProjetado = projection.projectedBalance;
   return { totalReceitas, totalFixas, totalVariaveis, saldoProjetado };
 }
 
@@ -65,10 +51,10 @@ router.post("/", async (req, res) => {
       return res.status(409).json({ error: "Snapshot already exists for month" });
     }
     const computed = await computeSnapshotData(auth, mes);
-    const totalReceitas = req.body.total_receitas ?? computed.totalReceitas;
-    const totalFixas = req.body.total_fixas ?? computed.totalFixas;
-    const totalVariaveis = req.body.total_variaveis ?? computed.totalVariaveis;
-    const saldoProjetado = req.body.saldo_projetado ?? computed.saldoProjetado;
+    const totalReceitas = computed.totalReceitas;
+    const totalFixas = computed.totalFixas;
+    const totalVariaveis = computed.totalVariaveis;
+    const saldoProjetado = computed.saldoProjetado;
     const confirmNegative = req.body.confirm_negative === true;
     if (Number(saldoProjetado) <= 0 && !confirmNegative) {
       return res.status(409).json({
