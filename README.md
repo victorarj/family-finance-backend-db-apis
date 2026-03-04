@@ -1,22 +1,41 @@
 # Finances API
 
-This repository contains a simple financial management backend built with Node.js, Express and PostgreSQL. It provides RESTful endpoints for managing users, taxes, bank accounts, categories, currencies, distributions, priorities, recipes, resumes and expenses.
+This repository contains a simple financial management backend built with Node.js, Express and PostgreSQL. It provides RESTful endpoints for managing users, taxes, bank accounts, categories, currencies, distributions, priorities, recipes, resumes and expenses. Authentication is handled with JWTs and there is a public signup/login route.
 
-## üöÄ Features
+## Ì∫Ä Features
 
 - Express.js server using ES modules
+- JWT‚Äëbased authentication (user registration & login, Bearer tokens, password hashing with bcrypt)
+- Public `/public` endpoint for signup/login; all other routes require a valid token
+- RESTful endpoints for users, taxes, bank accounts, categories, currencies, distributions, priorities, recipes, resumes and expenses
 - PostgreSQL database with Docker Compose setup
-- Environment variable configuration via `.env`
+- Environment variable configuration via `.env` (see below)
 - API routes organized under `backend/routes`
 - Swagger specification available at `swagger.json`
 
-## üõ†Ô∏è Prerequisites
+## Ìª†Ô∏è Prerequisites
 
 - [Node.js](https://nodejs.org/) 18+ (for local development)
 - [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
 - (Optional) [GitHub CLI](https://cli.github.com/) for repo creation
 
-## üìÅ Project Structure
+### Ì¥ß Environment variables
+
+Create a `.env` file in the project root containing:
+
+```
+POSTGRES_USER=your_user
+POSTGRES_PASSWORD=your_password
+POSTGRES_DB=your_db
+DB_HOST=localhost          # default when running locally
+DB_PORT=5432               # default PostgreSQL port
+JWT_SECRET=your_jwt_secret # required for token generation/verification
+PORT=3000                  # optional override for server port
+```
+
+> **Note:** A `.env.example` template is included in the repo; you can copy it if you prefer.
+
+## Ì≥Å Project Structure
 
 ```
 finances/
@@ -40,12 +59,15 @@ finances/
    cd finances
    ```
 
-2. **Copy `.env` template or create your own**
+2. **Create your `.env` file**
+
+   You can either copy the provided template:
 
    ```bash
    cp .env.example .env
-   # then edit to set POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, etc.
    ```
+
+   ‚Ä¶or create it manually by setting the variables listed above.
 
 3. **Launch services with Docker Compose**
 
@@ -55,7 +77,7 @@ finances/
 
    - PostgreSQL will be available on `localhost:5435`
    - pgAdmin web UI on `http://localhost:5050` (use credentials from `.env`)
-   - Backend server on `http://localhost:3000`
+   - Backend server on `http://localhost:3000` (or wherever `PORT` is set)
 
 4. **Run backend locally (alternative)**
 
@@ -68,9 +90,16 @@ finances/
 
    Make sure your `.env` points to a running Postgres instance.
 
-## üì¶ API Documentation
+## Ì¥ê Authentication
 
-The API is described by the `swagger.json` file. You can import it into tools like [Swagger UI](https://swagger.io/tools/swagger-ui/) or [Postman](https://www.postman.com/) to explore endpoints and request/response schemas.
+- **Register**: `POST /public` with JSON `{ nome, email, senha, telefone }`.
+- **Login**: `POST /public/login` returns a JWT (`Authorization: Bearer <token>`) valid for 1‚ÄØhour.
+- Include the token in the `Authorization` header for all protected endpoints (e.g. `/users`, `/taxes`, `/expenses`, etc.).
+- The server uses the `JWT_SECRET` environment variable and bcrypt for password hashing.
+
+## Ì≥¶ API Documentation
+
+The API is described by the `swagger.json` file. You can import it into tools like [Swagger UI](https://swagger.io/tools/swagger-ui/) or [Postman](https://www.postman.com/) to explore endpoints and request/response schemas. Protected routes require an `Authorization` header with a Bearer token.
 
 ## ‚úÖ Common Commands
 
@@ -80,7 +109,7 @@ The API is described by the `swagger.json` file. You can import it into tools li
 | `docker compose up`   | Spin up PostgreSQL, pgAdmin and backend containers |
 | `docker compose down` | Stop and remove containers                         |
 
-## üß© Contributing
+## Ì∑© Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/foo`)
@@ -88,7 +117,7 @@ The API is described by the `swagger.json` file. You can import it into tools li
 4. Push to the branch (`git push origin feature/foo`)
 5. Open a Pull Request
 
-## üìÑ License
+## Ì≥Ñ License
 
 This project is licensed under the [ISC License](https://opensource.org/licenses/ISC).
 
