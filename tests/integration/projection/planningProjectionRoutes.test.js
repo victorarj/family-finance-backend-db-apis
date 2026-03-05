@@ -49,7 +49,7 @@ describe("planning projection route", () => {
         expenses_logged: 400,
         fixed_expenses: 0,
         planned_variable: 500,
-        projected_balance: 1100,
+        projected_balance: 1500,
       }),
     );
   });

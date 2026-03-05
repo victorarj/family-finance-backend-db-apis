@@ -33,8 +33,7 @@ export async function getProjectionDataForMonth(user, mes) {
 
   const totalIncome = incomeLogged + recurringIncomeTotal;
   const totalExpenses = expensesLogged + fixedExpenses;
-  const projectedBalance =
-    totalIncome - expensesLogged - fixedExpenses - plannedVariable;
+  const projectedBalance = totalIncome - fixedExpenses - plannedVariable;
 
   return {
     month: mes,

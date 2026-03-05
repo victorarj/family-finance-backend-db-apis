@@ -49,5 +49,10 @@ describe("dashboard route", () => {
     expect(dashboard.status).toBe(200);
     expect(dashboard.body.projection).toBe(planningProjection.body.projected_balance);
     expect(dashboard.body.balance).toBe(1600);
+    expect(dashboard.body.actual_income).toBe(2000);
+    expect(dashboard.body.actual_expenses).toBe(400);
+    expect(dashboard.body.planned_income).toBeNull();
+    expect(dashboard.body.planned_expenses).toBeNull();
+    expect(dashboard.body.planned_vs_actual_diff).toBeNull();
   });
 });

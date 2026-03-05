@@ -61,7 +61,7 @@ describe("full financial lifecycle", () => {
         expenses_logged: 1000,
         fixed_expenses: 0,
         planned_variable: 300,
-        projected_balance: 700,
+        projected_balance: 1700,
       }),
     );
 
@@ -73,7 +73,7 @@ describe("full financial lifecycle", () => {
     expect(Number(snapshot.body.total_receitas)).toBe(2000);
     expect(Number(snapshot.body.total_fixas)).toBe(0);
     expect(Number(snapshot.body.total_variaveis)).toBe(300);
-    expect(Number(snapshot.body.saldo_projetado)).toBe(700);
+    expect(Number(snapshot.body.saldo_projetado)).toBe(1700);
 
     const status = await request(app)
       .get(`/planning/status?mes=${TEST_MONTH}`)

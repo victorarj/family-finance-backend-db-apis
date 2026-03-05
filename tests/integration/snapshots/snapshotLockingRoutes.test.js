@@ -47,6 +47,18 @@ describe("snapshot locking routes", () => {
       .set(authHeader)
       .send(incomeFixture({ nome: income.body.nome, valor: 2500 }));
     expect(updateIncome.status).toBe(409);
+
+    const createExpenseAfterSnapshot = await request(app)
+      .post("/expenses")
+      .set(authHeader)
+      .send(expenseFixture({ nome: `Post Snapshot Expense ${Date.now()}` }));
+    expect(createExpenseAfterSnapshot.status).toBe(201);
+
+    const createIncomeAfterSnapshot = await request(app)
+      .post("/income")
+      .set(authHeader)
+      .send(incomeFixture({ nome: `Post Snapshot Income ${Date.now()}` }));
+    expect(createIncomeAfterSnapshot.status).toBe(201);
   });
 
   it("returns locked=true in list endpoints for locked month", async () => {

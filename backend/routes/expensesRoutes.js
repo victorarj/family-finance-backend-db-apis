@@ -28,7 +28,6 @@ router.post("/", async (req, res) => {
   } = req.body;
   try {
     const auth = await resolveAuthUser(req);
-    await assertMonthIsOpen(auth.id, monthFromDate(data_inicio));
     const result = await pool.query(
       "INSERT INTO DESPESAS (nome, valor_total, valor_mensal, numero_parcelas, data_inicio, data_fim, categoria_id, prioridade_id, debito_bancario, conta_bancaria_id, frequencia_pagamento, descricao, tipo_despesa, dono_despesa, moeda) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *",
       [

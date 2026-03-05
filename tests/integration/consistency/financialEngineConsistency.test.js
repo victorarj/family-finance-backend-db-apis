@@ -49,9 +49,9 @@ describe("financial engine consistency", () => {
       .set(authHeader)
       .send({ mes: TEST_MONTH });
 
-    expect(planningProjection.body.projected_balance).toBe(1100);
-    expect(dashboard.body.projection).toBe(1100);
-    expect(Number(snapshot.body.saldo_projetado)).toBe(1100);
+    expect(planningProjection.body.projected_balance).toBe(1500);
+    expect(dashboard.body.projection).toBe(1500);
+    expect(Number(snapshot.body.saldo_projetado)).toBe(1500);
   });
 
   it("enforces lock only for snapped month (cross-month isolation)", async () => {

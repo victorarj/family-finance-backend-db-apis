@@ -26,7 +26,7 @@ describe("projectionService", () => {
     );
     expect(result.totalIncome).toBe(2000);
     expect(result.totalExpenses).toBe(400);
-    expect(result.projectedBalance).toBe(1100);
+    expect(result.projectedBalance).toBe(1500);
   });
 
   it("includes recurring income and recurring expenses", async () => {
@@ -43,7 +43,7 @@ describe("projectionService", () => {
     );
     expect(result.totalIncome).toBe(1500);
     expect(result.totalExpenses).toBe(500);
-    expect(result.projectedBalance).toBe(1000);
+    expect(result.projectedBalance).toBe(1300);
   });
 
   it("falls back to zero when aggregates are null", async () => {

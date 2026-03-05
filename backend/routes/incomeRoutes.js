@@ -13,7 +13,6 @@ router.post("/", async (req, res) => {
   const { nome, valor, data_recebimento, descricao, moeda } = req.body;
   try {
     const auth = await resolveAuthUser(req);
-    await assertMonthIsOpen(auth.id, monthFromDate(data_recebimento));
     const result = await pool.query(
       "INSERT INTO RECEITAS (nome, valor, dono_receita, data_recebimento, descricao, moeda) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
       [nome, valor, auth.email, data_recebimento, descricao, moeda],

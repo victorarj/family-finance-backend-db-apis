@@ -68,6 +68,49 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.get("/:id/details", async (req, res) => {
+  try {
+    const auth = await resolveAuthUser(req);
+    const snapshotResult = await pool.query(
+      "SELECT * FROM SNAPSHOTS_MENSAIS WHERE id = $1 AND usuario_id = $2 LIMIT 1",
+      [req.params.id, auth.id],
+    );
+    if (!snapshotResult.rows.length) {
+      return res.status(404).json({ error: "Snapshot not found" });
+    }
+    const snapshot = snapshotResult.rows[0];
+    const incomeResult = await pool.query(
+      "SELECT COALESCE(SUM(valor),0) AS total FROM RECEITAS WHERE dono_receita = $1 AND to_char(data_recebimento, 'YYYY-MM') = $2",
+      [auth.email, snapshot.mes],
+    );
+    const expensesResult = await pool.query(
+      "SELECT COALESCE(SUM(valor_total),0) AS total FROM DESPESAS WHERE dono_despesa = $1 AND to_char(data_inicio, 'YYYY-MM') = $2",
+      [auth.email, snapshot.mes],
+    );
+
+    const actualIncome = Number(incomeResult.rows[0].total);
+    const actualExpenses = Number(expensesResult.rows[0].total);
+    const plannedIncome = Number(snapshot.total_receitas);
+    const plannedExpenses =
+      Number(snapshot.total_fixas) + Number(snapshot.total_variaveis);
+    const plannedBalance = Number(snapshot.saldo_projetado);
+    const actualBalance = actualIncome - actualExpenses;
+
+    res.json({
+      snapshot,
+      planned_income: plannedIncome,
+      planned_expenses: plannedExpenses,
+      projected_balance: plannedBalance,
+      actual_income: actualIncome,
+      actual_expenses: actualExpenses,
+      planned_vs_actual_diff: actualBalance - plannedBalance,
+    });
+  } catch (err) {
+    console.error("Error querying snapshot details: ", err);
+    res.status(500).json({ error: "database error" });
+  }
+});
+
 router.delete("/:id", async (req, res) => {
   try {
     const auth = await resolveAuthUser(req);
