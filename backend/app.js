@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import auth from "./middlewares/auth.js";
 import publicRoutes from "./routes/publicRoutes.js";
 import taxRoutes from "./routes/taxRoutes.js";
@@ -22,6 +23,26 @@ import transactionsRoutes from "./routes/transactionsRoutes.js";
 
 export function createApp() {
   const app = express();
+
+  const allowedOrigins = (
+    process.env.CORS_ALLOWED_ORIGINS ||
+    "https://family-finance-frontend-lpk2.onrender.com,http://localhost:5173,http://127.0.0.1:5173"
+  )
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        return callback(new Error("Not allowed by CORS"));
+      },
+    }),
+  );
+
   app.use(express.json());
   app.use("/public", publicRoutes);
   app.use("/users", auth, userRoutes);
