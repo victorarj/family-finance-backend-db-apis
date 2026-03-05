@@ -2,21 +2,16 @@ import express from "express";
 import pool from "../db.js";
 import { resolveAuthUser } from "../services/authUser.js";
 import { deriveMonthStatus } from "../services/planningService.js";
-import { getProjectionDataForMonth } from "../services/projectionService.js";
+import {
+  computeSnapshotData,
+  requiresNegativeConfirmation,
+  snapshotExistsForMonth,
+} from "../services/snapshotService.js";
 
 const router = express.Router();
 
 function currentMonth() {
   return new Date().toISOString().slice(0, 7);
-}
-
-async function computeSnapshotData(user, mes) {
-  const projection = await getProjectionDataForMonth(user, mes);
-  const totalReceitas = projection.totalIncome;
-  const totalFixas = projection.fixedExpenses;
-  const totalVariaveis = projection.plannedVariable;
-  const saldoProjetado = projection.projectedBalance;
-  return { totalReceitas, totalFixas, totalVariaveis, saldoProjetado };
 }
 
 router.get("/", async (req, res) => {
@@ -43,11 +38,7 @@ router.post("/", async (req, res) => {
   const mes = String(req.body.mes || currentMonth());
   try {
     const auth = await resolveAuthUser(req);
-    const existing = await pool.query(
-      "SELECT 1 FROM SNAPSHOTS_MENSAIS WHERE usuario_id = $1 AND mes = $2",
-      [auth.id, mes],
-    );
-    if (existing.rows.length > 0) {
+    if (await snapshotExistsForMonth(auth.id, mes)) {
       return res.status(409).json({ error: "Snapshot already exists for month" });
     }
     const computed = await computeSnapshotData(auth, mes);
@@ -56,7 +47,7 @@ router.post("/", async (req, res) => {
     const totalVariaveis = computed.totalVariaveis;
     const saldoProjetado = computed.saldoProjetado;
     const confirmNegative = req.body.confirm_negative === true;
-    if (Number(saldoProjetado) <= 0 && !confirmNegative) {
+    if (requiresNegativeConfirmation(saldoProjetado, confirmNegative)) {
       return res.status(409).json({
         error:
           "Your projected balance is negative or zero. Are you sure you want to confirm planning?",

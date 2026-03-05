@@ -5,7 +5,11 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run --maxWorkers=1 --coverage",
+    "test:watch": "vitest --maxWorkers=1",
+    "test:unit": "vitest run tests/unit --maxWorkers=1",
+    "test:integration": "vitest run tests/integration --maxWorkers=1",
+    "test:ci": "vitest run --maxWorkers=1 --coverage --reporter=default",
     "dev": "node backend/server.js"
   },
   "keywords": [],
@@ -17,5 +21,11 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.19.0"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
+    "@testcontainers/postgresql": "^11.7.3",
+    "supertest": "^7.1.4",
+    "vitest": "^3.2.4"
   }
 }
