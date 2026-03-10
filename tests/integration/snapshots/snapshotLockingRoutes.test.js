@@ -27,9 +27,12 @@ describe("snapshot locking routes", () => {
   });
 
   it("blocks expense and income updates after snapshot lock", async () => {
-    const { authHeader } = await createAuthenticatedUser(app);
+    const { authHeader, bankAccountId } = await createAuthenticatedUser(app);
     const income = await request(app).post("/income").set(authHeader).send(incomeFixture());
-    const expense = await request(app).post("/expenses").set(authHeader).send(expenseFixture());
+    const expense = await request(app)
+      .post("/expenses")
+      .set(authHeader)
+      .send(expenseFixture({ conta_bancaria_id: bankAccountId }));
 
     await request(app)
       .post("/monthly-snapshots")
@@ -39,7 +42,14 @@ describe("snapshot locking routes", () => {
     const updateExpense = await request(app)
       .put(`/expenses/${expense.body.id}`)
       .set(authHeader)
-      .send(expenseFixture({ nome: expense.body.nome, valor_total: 1200, valor_mensal: 1200 }));
+      .send(
+        expenseFixture({
+          nome: expense.body.nome,
+          valor_total: 1200,
+          valor_mensal: 1200,
+          conta_bancaria_id: bankAccountId,
+        }),
+      );
     expect(updateExpense.status).toBe(409);
 
     const updateIncome = await request(app)
@@ -51,7 +61,7 @@ describe("snapshot locking routes", () => {
     const createExpenseAfterSnapshot = await request(app)
       .post("/expenses")
       .set(authHeader)
-      .send(expenseFixture({ nome: `Post Snapshot Expense ${Date.now()}` }));
+      .send(expenseFixture({ nome: `Post Snapshot Expense ${Date.now()}`, conta_bancaria_id: bankAccountId }));
     expect(createExpenseAfterSnapshot.status).toBe(201);
 
     const createIncomeAfterSnapshot = await request(app)
@@ -62,9 +72,12 @@ describe("snapshot locking routes", () => {
   });
 
   it("returns locked=true in list endpoints for locked month", async () => {
-    const { authHeader } = await createAuthenticatedUser(app);
+    const { authHeader, bankAccountId } = await createAuthenticatedUser(app);
     await request(app).post("/income").set(authHeader).send(incomeFixture());
-    await request(app).post("/expenses").set(authHeader).send(expenseFixture());
+    await request(app)
+      .post("/expenses")
+      .set(authHeader)
+      .send(expenseFixture({ conta_bancaria_id: bankAccountId }));
     await request(app)
       .post("/monthly-snapshots")
       .set(authHeader)

@@ -27,7 +27,7 @@ describe("full financial lifecycle", () => {
   });
 
   it("create user -> transactions -> budget -> projection -> snapshot -> lock -> edit rejected", async () => {
-    const { authHeader } = await createAuthenticatedUser(app);
+    const { authHeader, bankAccountId } = await createAuthenticatedUser(app);
 
     const income = await request(app)
       .post("/income")
@@ -39,7 +39,7 @@ describe("full financial lifecycle", () => {
     const expense = await request(app)
       .post("/expenses")
       .set(authHeader)
-      .send(expenseFixture());
+      .send(expenseFixture({ conta_bancaria_id: bankAccountId }));
     expect(expense.status).toBe(201);
     expect(expense.body.locked).toBe(false);
     const expenseId = expense.body.id;
@@ -84,7 +84,7 @@ describe("full financial lifecycle", () => {
     const lockedEdit = await request(app)
       .put(`/expenses/${expenseId}`)
       .set(authHeader)
-      .send(expenseFixture({ nome: "Updated locked expense" }));
+      .send(expenseFixture({ nome: "Updated locked expense", conta_bancaria_id: bankAccountId }));
     expect(lockedEdit.status).toBe(409);
     expect(String(lockedEdit.body.error || "")).toMatch(/closed|snapshot|month/i);
   });

@@ -36,6 +36,10 @@ export async function ensureTestEnvironment() {
     adminPool,
     path.resolve(projectRoot, "postgres-init/migrations/001_extend_schema_planning.sql"),
   );
+  await applySqlFile(
+    adminPool,
+    path.resolve(projectRoot, "postgres-init/migrations/002_bank_accounts_management.sql"),
+  );
 
   const appModule = await import("../../backend/app.js");
   app = appModule.createApp();

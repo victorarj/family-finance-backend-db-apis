@@ -27,12 +27,12 @@ describe("financial engine consistency", () => {
   });
 
   it("keeps projection consistent across planning, dashboard, and snapshots", async () => {
-    const { authHeader } = await createAuthenticatedUser(app);
+    const { authHeader, bankAccountId } = await createAuthenticatedUser(app);
     await request(app).post("/income").set(authHeader).send(incomeFixture({ valor: 2000 }));
     await request(app)
       .post("/expenses")
       .set(authHeader)
-      .send(expenseFixture({ valor_total: 400, valor_mensal: 400 }));
+      .send(expenseFixture({ valor_total: 400, valor_mensal: 400, conta_bancaria_id: bankAccountId }));
     await request(app)
       .post("/monthly-budgets")
       .set(authHeader)
@@ -55,11 +55,11 @@ describe("financial engine consistency", () => {
   });
 
   it("enforces lock only for snapped month (cross-month isolation)", async () => {
-    const { authHeader } = await createAuthenticatedUser(app);
+    const { authHeader, bankAccountId } = await createAuthenticatedUser(app);
     const januaryExpense = await request(app)
       .post("/expenses")
       .set(authHeader)
-      .send(expenseFixture({ data_inicio: "2026-01-01", data_fim: "2026-01-31" }));
+      .send(expenseFixture({ data_inicio: "2026-01-01", data_fim: "2026-01-31", conta_bancaria_id: bankAccountId }));
     const februaryExpense = await request(app)
       .post("/expenses")
       .set(authHeader)
@@ -68,6 +68,7 @@ describe("financial engine consistency", () => {
           nome: `February Expense ${Date.now()}`,
           data_inicio: "2026-02-01",
           data_fim: "2026-02-28",
+          conta_bancaria_id: bankAccountId,
         }),
       );
 
@@ -79,7 +80,14 @@ describe("financial engine consistency", () => {
     const lockedJanuaryUpdate = await request(app)
       .put(`/expenses/${januaryExpense.body.id}`)
       .set(authHeader)
-      .send(expenseFixture({ nome: januaryExpense.body.nome, valor_total: 999, valor_mensal: 999 }));
+      .send(
+        expenseFixture({
+          nome: januaryExpense.body.nome,
+          valor_total: 999,
+          valor_mensal: 999,
+          conta_bancaria_id: bankAccountId,
+        }),
+      );
     expect(lockedJanuaryUpdate.status).toBe(409);
 
     const openFebruaryUpdate = await request(app)
@@ -92,6 +100,7 @@ describe("financial engine consistency", () => {
           valor_mensal: 888,
           data_inicio: "2026-02-01",
           data_fim: "2026-02-28",
+          conta_bancaria_id: bankAccountId,
         }),
       );
     expect(openFebruaryUpdate.status).toBe(200);

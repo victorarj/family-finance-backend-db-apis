@@ -27,12 +27,12 @@ describe("dashboard route", () => {
   });
 
   it("keeps projection aligned with planning projection", async () => {
-    const { authHeader } = await createAuthenticatedUser(app);
+    const { authHeader, bankAccountId } = await createAuthenticatedUser(app);
     await request(app).post("/income").set(authHeader).send(incomeFixture({ valor: 2000 }));
     await request(app)
       .post("/expenses")
       .set(authHeader)
-      .send(expenseFixture({ valor_total: 400, valor_mensal: 400 }));
+      .send(expenseFixture({ valor_total: 400, valor_mensal: 400, conta_bancaria_id: bankAccountId }));
     await request(app)
       .post("/monthly-budgets")
       .set(authHeader)

@@ -26,18 +26,25 @@ describe("expenses routes", () => {
   });
 
   it("creates and updates an expense", async () => {
-    const { authHeader } = await createAuthenticatedUser(app);
+    const { authHeader, bankAccountId } = await createAuthenticatedUser(app);
     const created = await request(app)
       .post("/expenses")
       .set(authHeader)
-      .send(expenseFixture({ valor_total: 200, valor_mensal: 200 }));
+      .send(expenseFixture({ valor_total: 200, valor_mensal: 200, conta_bancaria_id: bankAccountId }));
     expect(created.status).toBe(201);
     expect(created.body.locked).toBe(false);
 
     const updated = await request(app)
       .put(`/expenses/${created.body.id}`)
       .set(authHeader)
-      .send(expenseFixture({ nome: created.body.nome, valor_total: 300, valor_mensal: 300 }));
+      .send(
+        expenseFixture({
+          nome: created.body.nome,
+          valor_total: 300,
+          valor_mensal: 300,
+          conta_bancaria_id: bankAccountId,
+        }),
+      );
     expect(updated.status).toBe(200);
     expect(Number(updated.body.valor_total)).toBe(300);
   });

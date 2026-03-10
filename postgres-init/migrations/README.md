@@ -5,15 +5,17 @@
 Apply:
 
 `001_extend_schema_planning.sql`
+`002_bank_accounts_management.sql`
 
-This migration is non-destructive and extends the legacy schema with planning
-entities and support columns.
+These migrations are non-destructive and extend the legacy schema with planning
+entities, onboarding support, and bank-account lifecycle columns.
 
 ## Rollback migration
 
 Use:
 
 `001_extend_schema_planning_rollback.sql`
+`002_bank_accounts_management_rollback.sql`
 
 Rollback removes only objects introduced by the forward migration. Existing
 legacy core tables (`USUARIOS`, `DESPESAS`, `RECEITAS`, etc.) remain intact.

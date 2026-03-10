@@ -35,6 +35,9 @@ CREATE TABLE CONTAS_BANCARIAS (
     banco           VARCHAR(100) NOT NULL,
     moeda           CHAR(3) NOT NULL
                         REFERENCES MOEDAS(codigo),
+    ativo           BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at      TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMP NOT NULL DEFAULT NOW(),
     UNIQUE(dono_conta, nome_conta)
 );
 
@@ -197,6 +200,6 @@ INSERT INTO MOEDAS (codigo) VALUES
     ('EUR'),
     ('GBP');
 
-INSERT INTO CONTAS_BANCARIAS (nome_conta, dono_conta, banco, moeda) VALUES
-    ('Conta Principal', 'admin@example.com', 'Banco Brasil', 'BRL'),
-    ('Conta Dólares', 'admin@example.com', 'Banco Brasil', 'USD');
+INSERT INTO CONTAS_BANCARIAS (nome_conta, dono_conta, banco, moeda, ativo) VALUES
+    ('Conta Principal', 'admin@example.com', 'Banco Brasil', 'BRL', TRUE),
+    ('Conta Dólares', 'admin@example.com', 'Banco Brasil', 'USD', TRUE);

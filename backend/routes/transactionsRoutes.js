@@ -6,6 +6,7 @@ import {
   getLockedMonthsMap,
   monthFromDate,
 } from "../services/planningService.js";
+import { assertActiveBankAccountOwnership } from "../services/bankAccounts.js";
 
 const router = express.Router();
 
@@ -95,6 +96,11 @@ router.post("/", async (req, res) => {
     const auth = await resolveAuthUser(req);
     await assertMonthIsOpen(auth.id, monthFromDate(date));
     if (type === "expense") {
+      const bankAccountId = raw?.conta_bancaria_id;
+      if (!bankAccountId) {
+        return res.status(400).json({ error: "Bank account is required for expenses" });
+      }
+      await assertActiveBankAccountOwnership(bankAccountId, auth.email);
       const result = await pool.query(
         "INSERT INTO DESPESAS (nome, valor_total, valor_mensal, numero_parcelas, data_inicio, data_fim, categoria_id, prioridade_id, debito_bancario, conta_bancaria_id, frequencia_pagamento, descricao, tipo_despesa, dono_despesa, moeda) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *",
         [
@@ -107,7 +113,7 @@ router.post("/", async (req, res) => {
           category_id ?? raw?.categoria_id,
           raw?.prioridade_id ?? 1,
           raw?.debito_bancario ?? false,
-          raw?.conta_bancaria_id ?? 1,
+          bankAccountId,
           raw?.frequencia_pagamento ?? "mensal",
           raw?.descricao ?? description,
           raw?.tipo_despesa ?? "variavel",

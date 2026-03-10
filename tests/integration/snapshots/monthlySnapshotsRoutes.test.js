@@ -27,12 +27,12 @@ describe("monthly snapshots routes", () => {
   });
 
   it("creates a snapshot and blocks duplicates", async () => {
-    const { authHeader } = await createAuthenticatedUser(app);
+    const { authHeader, bankAccountId } = await createAuthenticatedUser(app);
     await request(app).post("/income").set(authHeader).send(incomeFixture({ valor: 2000 }));
     await request(app)
       .post("/expenses")
       .set(authHeader)
-      .send(expenseFixture({ valor_total: 1000, valor_mensal: 1000 }));
+      .send(expenseFixture({ valor_total: 1000, valor_mensal: 1000, conta_bancaria_id: bankAccountId }));
     await request(app)
       .post("/monthly-budgets")
       .set(authHeader)
@@ -75,7 +75,7 @@ describe("monthly snapshots routes", () => {
   });
 
   it("returns planned and actual values in snapshot details", async () => {
-    const { authHeader } = await createAuthenticatedUser(app);
+    const { authHeader, bankAccountId } = await createAuthenticatedUser(app);
     await request(app).post("/income").set(authHeader).send(incomeFixture({ valor: 2500 }));
     await request(app)
       .post("/monthly-budgets")
@@ -91,7 +91,7 @@ describe("monthly snapshots routes", () => {
     await request(app)
       .post("/expenses")
       .set(authHeader)
-      .send(expenseFixture({ valor_total: 600, valor_mensal: 600 }));
+      .send(expenseFixture({ valor_total: 600, valor_mensal: 600, conta_bancaria_id: bankAccountId }));
 
     const details = await request(app)
       .get(`/monthly-snapshots/${created.body.id}/details`)
