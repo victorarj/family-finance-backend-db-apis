@@ -203,3 +203,46 @@ INSERT INTO MOEDAS (codigo) VALUES
 INSERT INTO CONTAS_BANCARIAS (nome_conta, dono_conta, banco, moeda, ativo) VALUES
     ('Conta Principal', 'admin@example.com', 'Banco Brasil', 'BRL', TRUE),
     ('Conta Dólares', 'admin@example.com', 'Banco Brasil', 'USD', TRUE);
+
+CREATE EXTENSION IF NOT EXISTS vector;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'document_status') THEN
+        CREATE TYPE document_status AS ENUM ('uploaded', 'processing', 'ready', 'failed');
+    END IF;
+END
+$$;
+
+CREATE TABLE IF NOT EXISTS documents (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES USUARIOS(id) ON DELETE CASCADE,
+    filename VARCHAR(255) NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    storage_key TEXT NOT NULL UNIQUE,
+    source_type VARCHAR(50) NOT NULL CHECK (source_type IN ('payslip', 'bill', 'bank_statement', 'other')),
+    status document_status NOT NULL DEFAULT 'uploaded',
+    uploaded_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    processed_at TIMESTAMP NULL,
+    deleted_at TIMESTAMP NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_documents_user_uploaded_at
+    ON documents(user_id, uploaded_at DESC, id DESC);
+
+CREATE TABLE IF NOT EXISTS document_chunks (
+    id SERIAL PRIMARY KEY,
+    document_id INT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES USUARIOS(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    embedding vector(1536) NOT NULL,
+    chunk_index INT NOT NULL CHECK (chunk_index >= 0),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    UNIQUE (document_id, chunk_index)
+);
+
+CREATE INDEX IF NOT EXISTS idx_document_chunks_document_id
+    ON document_chunks(document_id, chunk_index, id);
+
+CREATE INDEX IF NOT EXISTS idx_document_chunks_user_id
+    ON document_chunks(user_id);

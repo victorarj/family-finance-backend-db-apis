@@ -11,8 +11,11 @@ import { userFixture } from "../../fixtures/users.js";
 describe("public routes", () => {
   let app;
 
-  beforeAll(async () => {
-    await ensureTestEnvironment();
+  beforeAll(async function () {
+    const environment = await ensureTestEnvironment();
+    if (environment.skipReason) {
+      this.skip(environment.skipReason);
+    }
     app = await getTestApp();
   }, 120000);
 

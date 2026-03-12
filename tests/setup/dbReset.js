@@ -1,6 +1,8 @@
 export async function resetDatabase(pool) {
   await pool.query(`
     TRUNCATE TABLE
+      document_chunks,
+      documents,
       ALOCACOES_SUPERAVIT,
       SNAPSHOTS_MENSAIS,
       ORCAMENTOS_MENSAIS,

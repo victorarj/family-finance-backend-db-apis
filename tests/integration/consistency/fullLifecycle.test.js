@@ -13,8 +13,11 @@ import { expenseFixture, incomeFixture } from "../../fixtures/transactions.js";
 describe("full financial lifecycle", () => {
   let app;
 
-  beforeAll(async () => {
-    await ensureTestEnvironment();
+  beforeAll(async function () {
+    const environment = await ensureTestEnvironment();
+    if (environment.skipReason) {
+      this.skip(environment.skipReason);
+    }
     app = await getTestApp();
   }, 120000);
 

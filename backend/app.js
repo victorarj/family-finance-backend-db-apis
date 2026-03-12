@@ -20,6 +20,8 @@ import monthlySnapshotsRoutes from "./routes/monthlySnapshotsRoutes.js";
 import surplusAllocationsRoutes from "./routes/surplusAllocationsRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import transactionsRoutes from "./routes/transactionsRoutes.js";
+import documentsRoutes from "./routes/documentsRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
 
 export function createApp() {
   const app = express();
@@ -64,5 +66,7 @@ export function createApp() {
   app.use("/surplus-allocations", auth, surplusAllocationsRoutes);
   app.use("/dashboard", auth, dashboardRoutes);
   app.use("/transactions", auth, transactionsRoutes);
+  app.use("/api/v1/documents", documentsRoutes);
+  app.use("/api/v1/ai", auth, aiRoutes);
   return app;
 }

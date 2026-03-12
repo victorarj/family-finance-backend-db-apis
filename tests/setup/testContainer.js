@@ -15,6 +15,10 @@ let adminPool;
 let dbPool;
 let app;
 
+function isContainerRuntimeUnavailable(error) {
+  return error instanceof Error && /Could not find a working container runtime strategy/i.test(error.message);
+}
+
 export async function ensureTestEnvironment() {
   if (started) {
     return { app, adminPool, dbPool };
@@ -23,7 +27,19 @@ export async function ensureTestEnvironment() {
   process.env.JWT_SECRET = process.env.JWT_SECRET || "test-jwt-secret";
   process.env.ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@example.com";
 
-  container = await new PostgreSqlContainer("postgres:16").start();
+  try {
+    container = await new PostgreSqlContainer("pgvector/pgvector:pg16").start();
+  } catch (error) {
+    if (isContainerRuntimeUnavailable(error)) {
+      return {
+        app: null,
+        adminPool: null,
+        dbPool: null,
+        skipReason: "Docker runtime unavailable for Testcontainers integration tests.",
+      };
+    }
+    throw error;
+  }
   process.env.POSTGRES_USER = container.getUsername();
   process.env.POSTGRES_PASSWORD = container.getPassword();
   process.env.POSTGRES_DB = container.getDatabase();
@@ -39,6 +55,10 @@ export async function ensureTestEnvironment() {
   await applySqlFile(
     adminPool,
     path.resolve(projectRoot, "postgres-init/migrations/002_bank_accounts_management.sql"),
+  );
+  await applySqlFile(
+    adminPool,
+    path.resolve(projectRoot, "postgres-init/migrations/003_documents_ai.sql"),
   );
 
   const appModule = await import("../../backend/app.js");
