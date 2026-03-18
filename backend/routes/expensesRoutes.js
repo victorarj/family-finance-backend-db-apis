@@ -13,6 +13,20 @@ import {
 
 const router = express.Router();
 
+function mapExpenseWriteError(err) {
+  if (err?.code === "23505") {
+    return {
+      statusCode: 409,
+      message: "Já existe uma despesa com esse nome para este usuário.",
+    };
+  }
+
+  return {
+    statusCode: err.statusCode || 500,
+    message: err.message || "database error",
+  };
+}
+
 router.post("/", async (req, res) => {
   const {
     nome,
@@ -56,7 +70,8 @@ router.post("/", async (req, res) => {
     res.status(201).json({ ...result.rows[0], locked: false });
   } catch (err) {
     console.error("Error creating expense: ", err);
-    res.status(err.statusCode || 500).json({ error: err.message || "database error" });
+    const mappedError = mapExpenseWriteError(err);
+    res.status(mappedError.statusCode).json({ error: mappedError.message });
   }
 });
 
@@ -168,7 +183,8 @@ router.put("/:id", async (req, res) => {
     res.json({ ...result.rows[0], locked: false });
   } catch (err) {
     console.error("Error updating expense: ", err);
-    res.status(err.statusCode || 500).json({ error: err.message || "database error" });
+    const mappedError = mapExpenseWriteError(err);
+    res.status(mappedError.statusCode).json({ error: mappedError.message });
   }
 });
 

@@ -56,4 +56,34 @@ describe("expenses routes", () => {
     const res = await request(app).post("/expenses").send(expenseFixture());
     expect(res.status).toBe(401);
   });
+
+  it("allows different users to create expenses with the same name", async () => {
+    const firstUser = await createAuthenticatedUser(app);
+    const secondUser = await createAuthenticatedUser(app);
+    const sharedName = "Alimentação · 18/03/2026";
+
+    const firstCreated = await request(app)
+      .post("/expenses")
+      .set(firstUser.authHeader)
+      .send(
+        expenseFixture({
+          nome: sharedName,
+          conta_bancaria_id: firstUser.bankAccountId,
+        }),
+      );
+
+    const secondCreated = await request(app)
+      .post("/expenses")
+      .set(secondUser.authHeader)
+      .send(
+        expenseFixture({
+          nome: sharedName,
+          conta_bancaria_id: secondUser.bankAccountId,
+        }),
+      );
+
+    expect(firstCreated.status).toBe(201);
+    expect(secondCreated.status).toBe(201);
+    expect(firstCreated.body.dono_despesa).not.toBe(secondCreated.body.dono_despesa);
+  });
 });

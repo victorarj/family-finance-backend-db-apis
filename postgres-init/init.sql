@@ -102,7 +102,7 @@ CREATE TABLE DESPESAS (
                                 REFERENCES USUARIOS(email),
     moeda                   CHAR(3) NOT NULL
                                 REFERENCES MOEDAS(codigo),
-    UNIQUE (nome)
+    UNIQUE (dono_despesa, nome)
 );
 
 CREATE TABLE RECEITAS (
