@@ -1,5 +1,6 @@
 import express from "express";
 import pool from "../db.js";
+import { resolveAuthUser } from "../services/authUser.js";
 
 const router = express.Router();
 
@@ -7,10 +8,23 @@ function normalizeCode(value) {
   return String(value || "").trim().toUpperCase();
 }
 
-async function getCurrencyRowByCode(code) {
+async function getCurrencyBaseForUser(code, userEmail) {
   const result = await pool.query(
-    "SELECT codigo, ativo, is_default FROM moedas WHERE codigo = $1 LIMIT 1",
-    [code],
+    `SELECT m.codigo,
+            m.is_default,
+            m.owner_email,
+            CASE
+              WHEN m.is_default THEN COALESCE(mu.ativo, TRUE)
+              ELSE m.ativo
+            END AS ativo
+     FROM moedas m
+     LEFT JOIN moedas_usuario mu
+       ON mu.moeda_codigo = m.codigo
+      AND mu.usuario_email = $2
+     WHERE m.codigo = $1
+       AND (m.is_default = TRUE OR m.owner_email = $2)
+     LIMIT 1`,
+    [code, userEmail],
   );
   return result.rows[0] || null;
 }
@@ -45,18 +59,23 @@ async function serializeCurrency(row) {
     ativo: row.ativo,
     is_default: row.is_default,
     is_in_use: usage.isInUse,
-    can_delete: usage.canDelete,
+    can_delete: !row.is_default && usage.canDelete,
+    can_edit: !row.is_default && !usage.isInUse,
   };
 }
 
 router.post("/", async (req, res) => {
   const codigo = normalizeCode(req.body.codigo);
   try {
+    const auth = await resolveAuthUser(req);
     const result = await pool.query(
-      "INSERT INTO moedas (codigo, ativo, is_default) VALUES ($1, TRUE, FALSE) RETURNING codigo, ativo, is_default",
-      [codigo],
+      `INSERT INTO moedas (codigo, ativo, is_default, owner_email)
+       VALUES ($1, TRUE, FALSE, $2)
+       RETURNING codigo`,
+      [codigo, auth.email],
     );
-    res.status(201).json(await serializeCurrency(result.rows[0]));
+    const created = await getCurrencyBaseForUser(result.rows[0].codigo, auth.email);
+    res.status(201).json(await serializeCurrency(created));
   } catch (err) {
     console.error("Error creating currency: ", err);
     if (err.code === "23505") {
@@ -68,15 +87,26 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
+    const auth = await resolveAuthUser(req);
     const includeInactive = req.query.include_inactive === "true";
     const result = await pool.query(
-      `SELECT codigo, ativo, is_default
-       FROM moedas
-       ${includeInactive ? "" : "WHERE ativo = TRUE"}
-       ORDER BY codigo`,
+      `SELECT m.codigo,
+              m.is_default,
+              m.owner_email,
+              CASE
+                WHEN m.is_default THEN COALESCE(mu.ativo, TRUE)
+                ELSE m.ativo
+              END AS ativo
+       FROM moedas m
+       LEFT JOIN moedas_usuario mu
+         ON mu.moeda_codigo = m.codigo
+        AND mu.usuario_email = $1
+       WHERE m.is_default = TRUE OR m.owner_email = $1
+       ORDER BY m.codigo`,
+      [auth.email],
     );
-    const currencies = await Promise.all(result.rows.map((row) => serializeCurrency(row)));
-    res.json(currencies);
+    const serialized = await Promise.all(result.rows.map((row) => serializeCurrency(row)));
+    res.json(includeInactive ? serialized : serialized.filter((item) => item.ativo));
   } catch (err) {
     console.error("Error querying currencies: ", err);
     res.status(500).json({ error: "database error" });
@@ -87,21 +117,30 @@ router.put("/:codigo", async (req, res) => {
   const codigo = normalizeCode(req.params.codigo);
   const novoCodigo = normalizeCode(req.body.novo_codigo);
   try {
-    const result = await pool.query(
-      "UPDATE moedas SET codigo = $1 WHERE codigo = $2 RETURNING codigo, ativo, is_default",
-      [novoCodigo, codigo],
-    );
-    if (result.rows.length === 0) {
+    const auth = await resolveAuthUser(req);
+    const existing = await getCurrencyBaseForUser(codigo, auth.email);
+    if (!existing) {
       return res.status(404).json({ error: "Currency not found" });
     }
-    res.json(await serializeCurrency(result.rows[0]));
+    if (existing.is_default) {
+      return res.status(403).json({ error: "Default currencies cannot be renamed" });
+    }
+
+    const usage = await getCurrencyUsage(codigo);
+    if (usage.isInUse) {
+      return res.status(409).json({ error: "In-use currencies cannot be renamed" });
+    }
+
+    await pool.query(
+      "UPDATE moedas SET codigo = $1 WHERE codigo = $2 AND owner_email = $3",
+      [novoCodigo, codigo, auth.email],
+    );
+    const updated = await getCurrencyBaseForUser(novoCodigo, auth.email);
+    res.json(await serializeCurrency(updated));
   } catch (err) {
     console.error("Error updating currency: ", err);
     if (err.code === "23505") {
       return res.status(409).json({ error: "Currency already exists" });
-    }
-    if (err.code === "23503") {
-      return res.status(409).json({ error: "In-use currencies cannot be renamed" });
     }
     res.status(500).json({ error: "database error" });
   }
@@ -110,14 +149,29 @@ router.put("/:codigo", async (req, res) => {
 router.post("/:codigo/activate", async (req, res) => {
   const codigo = normalizeCode(req.params.codigo);
   try {
-    const result = await pool.query(
-      "UPDATE moedas SET ativo = TRUE WHERE codigo = $1 RETURNING codigo, ativo, is_default",
-      [codigo],
-    );
-    if (result.rows.length === 0) {
+    const auth = await resolveAuthUser(req);
+    const existing = await getCurrencyBaseForUser(codigo, auth.email);
+    if (!existing) {
       return res.status(404).json({ error: "Currency not found" });
     }
-    res.json(await serializeCurrency(result.rows[0]));
+
+    if (existing.is_default) {
+      await pool.query(
+        `INSERT INTO moedas_usuario (usuario_email, moeda_codigo, ativo)
+         VALUES ($1, $2, TRUE)
+         ON CONFLICT (usuario_email, moeda_codigo)
+         DO UPDATE SET ativo = EXCLUDED.ativo`,
+        [auth.email, codigo],
+      );
+    } else {
+      await pool.query(
+        "UPDATE moedas SET ativo = TRUE WHERE codigo = $1 AND owner_email = $2",
+        [codigo, auth.email],
+      );
+    }
+
+    const updated = await getCurrencyBaseForUser(codigo, auth.email);
+    res.json(await serializeCurrency(updated));
   } catch (err) {
     console.error("Error activating currency: ", err);
     res.status(500).json({ error: "database error" });
@@ -127,29 +181,37 @@ router.post("/:codigo/activate", async (req, res) => {
 router.delete("/:codigo", async (req, res) => {
   const codigo = normalizeCode(req.params.codigo);
   try {
-    const existing = await getCurrencyRowByCode(codigo);
+    const auth = await resolveAuthUser(req);
+    const existing = await getCurrencyBaseForUser(codigo, auth.email);
     if (!existing) {
       return res.status(404).json({ error: "Currency not found" });
     }
 
-    const usage = await getCurrencyUsage(codigo);
-    const mustSoftDelete = existing.is_default || usage.isInUse;
-
-    if (mustSoftDelete) {
-      const result = await pool.query(
-        "UPDATE moedas SET ativo = FALSE WHERE codigo = $1 RETURNING codigo, ativo, is_default",
-        [codigo],
+    if (existing.is_default) {
+      await pool.query(
+        `INSERT INTO moedas_usuario (usuario_email, moeda_codigo, ativo)
+         VALUES ($1, $2, FALSE)
+         ON CONFLICT (usuario_email, moeda_codigo)
+         DO UPDATE SET ativo = EXCLUDED.ativo`,
+        [auth.email, codigo],
       );
-      return res.json(await serializeCurrency(result.rows[0]));
+      const updated = await getCurrencyBaseForUser(codigo, auth.email);
+      return res.json(await serializeCurrency(updated));
     }
 
-    await pool.query("DELETE FROM moedas WHERE codigo = $1", [codigo]);
-    res.json({
-      ...(await serializeCurrency(existing)),
-      deleted: true,
-      ativo: false,
-      can_delete: true,
-    });
+    const usage = await getCurrencyUsage(codigo);
+    if (usage.isInUse) {
+      await pool.query(
+        "UPDATE moedas SET ativo = FALSE WHERE codigo = $1 AND owner_email = $2",
+        [codigo, auth.email],
+      );
+      const updated = await getCurrencyBaseForUser(codigo, auth.email);
+      return res.json(await serializeCurrency(updated));
+    }
+
+    const deleted = await serializeCurrency(existing);
+    await pool.query("DELETE FROM moedas WHERE codigo = $1 AND owner_email = $2", [codigo, auth.email]);
+    res.json({ ...deleted, deleted: true, ativo: false });
   } catch (err) {
     console.error("Error deleting currency: ", err);
     res.status(500).json({ error: "database error" });

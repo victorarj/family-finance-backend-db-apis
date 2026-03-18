@@ -1,5 +1,6 @@
 import express from "express";
 import pool from "../db.js";
+import { resolveAuthUser } from "../services/authUser.js";
 
 const router = express.Router();
 
@@ -8,10 +9,24 @@ function parseCategoryId(value) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-async function getCategoryRowById(id) {
+async function getCategoryBaseForUser(id, userEmail) {
   const result = await pool.query(
-    "SELECT id, nome, ativo, is_default FROM categorias WHERE id = $1 LIMIT 1",
-    [id],
+    `SELECT c.id,
+            c.nome,
+            c.is_default,
+            c.owner_email,
+            CASE
+              WHEN c.is_default THEN COALESCE(cu.ativo, TRUE)
+              ELSE c.ativo
+            END AS ativo
+     FROM categorias c
+     LEFT JOIN categorias_usuario cu
+       ON cu.categoria_id = c.id
+      AND cu.usuario_email = $2
+     WHERE c.id = $1
+       AND (c.is_default = TRUE OR c.owner_email = $2)
+     LIMIT 1`,
+    [id, userEmail],
   );
   return result.rows[0] || null;
 }
@@ -39,18 +54,23 @@ async function serializeCategory(row) {
     ativo: row.ativo,
     is_default: row.is_default,
     is_in_use: usage.isInUse,
-    can_delete: usage.canDelete,
+    can_delete: !row.is_default && usage.canDelete,
+    can_edit: !row.is_default,
   };
 }
 
 router.post("/", async (req, res) => {
   const { nome } = req.body;
   try {
+    const auth = await resolveAuthUser(req);
     const result = await pool.query(
-      "INSERT INTO categorias (nome, ativo, is_default) VALUES ($1, TRUE, FALSE) RETURNING id, nome, ativo, is_default",
-      [nome],
+      `INSERT INTO categorias (nome, ativo, is_default, owner_email)
+       VALUES ($1, TRUE, FALSE, $2)
+       RETURNING id`,
+      [nome, auth.email],
     );
-    res.status(201).json(await serializeCategory(result.rows[0]));
+    const created = await getCategoryBaseForUser(result.rows[0].id, auth.email);
+    res.status(201).json(await serializeCategory(created));
   } catch (err) {
     console.error("Error creating category: ", err);
     if (err.code === "23505") {
@@ -62,15 +82,27 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
+    const auth = await resolveAuthUser(req);
     const includeInactive = req.query.include_inactive === "true";
     const result = await pool.query(
-      `SELECT id, nome, ativo, is_default
-       FROM categorias
-       ${includeInactive ? "" : "WHERE ativo = TRUE"}
-       ORDER BY nome`,
+      `SELECT c.id,
+              c.nome,
+              c.is_default,
+              c.owner_email,
+              CASE
+                WHEN c.is_default THEN COALESCE(cu.ativo, TRUE)
+                ELSE c.ativo
+              END AS ativo
+       FROM categorias c
+       LEFT JOIN categorias_usuario cu
+         ON cu.categoria_id = c.id
+        AND cu.usuario_email = $1
+       WHERE c.is_default = TRUE OR c.owner_email = $1
+       ORDER BY c.nome`,
+      [auth.email],
     );
-    const categories = await Promise.all(result.rows.map((row) => serializeCategory(row)));
-    res.json(categories);
+    const serialized = await Promise.all(result.rows.map((row) => serializeCategory(row)));
+    res.json(includeInactive ? serialized : serialized.filter((item) => item.ativo));
   } catch (err) {
     console.error("Error querying categories: ", err);
     res.status(500).json({ error: "database error" });
@@ -85,14 +117,21 @@ router.put("/:id", async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
-      "UPDATE categorias SET nome = $1 WHERE id = $2 RETURNING id, nome, ativo, is_default",
-      [nome, id],
-    );
-    if (result.rows.length === 0) {
+    const auth = await resolveAuthUser(req);
+    const existing = await getCategoryBaseForUser(id, auth.email);
+    if (!existing) {
       return res.status(404).json({ error: "Category not found" });
     }
-    res.json(await serializeCategory(result.rows[0]));
+    if (existing.is_default) {
+      return res.status(403).json({ error: "Default categories cannot be renamed" });
+    }
+
+    await pool.query(
+      "UPDATE categorias SET nome = $1 WHERE id = $2 AND owner_email = $3",
+      [nome, id, auth.email],
+    );
+    const updated = await getCategoryBaseForUser(id, auth.email);
+    res.json(await serializeCategory(updated));
   } catch (err) {
     console.error("Error updating category: ", err);
     if (err.code === "23505") {
@@ -109,14 +148,29 @@ router.post("/:id/activate", async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
-      "UPDATE categorias SET ativo = TRUE WHERE id = $1 RETURNING id, nome, ativo, is_default",
-      [id],
-    );
-    if (result.rows.length === 0) {
+    const auth = await resolveAuthUser(req);
+    const existing = await getCategoryBaseForUser(id, auth.email);
+    if (!existing) {
       return res.status(404).json({ error: "Category not found" });
     }
-    res.json(await serializeCategory(result.rows[0]));
+
+    if (existing.is_default) {
+      await pool.query(
+        `INSERT INTO categorias_usuario (usuario_email, categoria_id, ativo)
+         VALUES ($1, $2, TRUE)
+         ON CONFLICT (usuario_email, categoria_id)
+         DO UPDATE SET ativo = EXCLUDED.ativo`,
+        [auth.email, id],
+      );
+    } else {
+      await pool.query(
+        "UPDATE categorias SET ativo = TRUE WHERE id = $1 AND owner_email = $2",
+        [id, auth.email],
+      );
+    }
+
+    const updated = await getCategoryBaseForUser(id, auth.email);
+    res.json(await serializeCategory(updated));
   } catch (err) {
     console.error("Error activating category: ", err);
     res.status(500).json({ error: "database error" });
@@ -130,29 +184,37 @@ router.delete("/:id", async (req, res) => {
   }
 
   try {
-    const existing = await getCategoryRowById(id);
+    const auth = await resolveAuthUser(req);
+    const existing = await getCategoryBaseForUser(id, auth.email);
     if (!existing) {
       return res.status(404).json({ error: "Category not found" });
     }
 
-    const usage = await getCategoryUsage(id);
-    const mustSoftDelete = existing.is_default || usage.isInUse;
-
-    if (mustSoftDelete) {
-      const result = await pool.query(
-        "UPDATE categorias SET ativo = FALSE WHERE id = $1 RETURNING id, nome, ativo, is_default",
-        [id],
+    if (existing.is_default) {
+      await pool.query(
+        `INSERT INTO categorias_usuario (usuario_email, categoria_id, ativo)
+         VALUES ($1, $2, FALSE)
+         ON CONFLICT (usuario_email, categoria_id)
+         DO UPDATE SET ativo = EXCLUDED.ativo`,
+        [auth.email, id],
       );
-      return res.json(await serializeCategory(result.rows[0]));
+      const updated = await getCategoryBaseForUser(id, auth.email);
+      return res.json(await serializeCategory(updated));
     }
 
-    await pool.query("DELETE FROM categorias WHERE id = $1", [id]);
-    res.json({
-      ...(await serializeCategory(existing)),
-      deleted: true,
-      ativo: false,
-      can_delete: true,
-    });
+    const usage = await getCategoryUsage(id);
+    if (usage.isInUse) {
+      await pool.query(
+        "UPDATE categorias SET ativo = FALSE WHERE id = $1 AND owner_email = $2",
+        [id, auth.email],
+      );
+      const updated = await getCategoryBaseForUser(id, auth.email);
+      return res.json(await serializeCategory(updated));
+    }
+
+    const deleted = await serializeCategory(existing);
+    await pool.query("DELETE FROM categorias WHERE id = $1 AND owner_email = $2", [id, auth.email]);
+    res.json({ ...deleted, deleted: true, ativo: false });
   } catch (err) {
     console.error("Error deleting category: ", err);
     res.status(500).json({ error: "database error" });

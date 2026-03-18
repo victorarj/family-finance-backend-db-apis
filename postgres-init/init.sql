@@ -13,9 +13,31 @@ CREATE TABLE USUARIOS (
 
 CREATE TABLE CATEGORIAS (
     id          SERIAL PRIMARY KEY,
-    nome        VARCHAR(100) UNIQUE NOT NULL,
+    nome        VARCHAR(100) NOT NULL,
     ativo       BOOLEAN NOT NULL DEFAULT TRUE,
-    is_default  BOOLEAN NOT NULL DEFAULT FALSE
+    is_default  BOOLEAN NOT NULL DEFAULT FALSE,
+    owner_email VARCHAR(255) NULL
+                    REFERENCES USUARIOS(email)
+                    ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX idx_categorias_default_nome_unique
+    ON CATEGORIAS (nome)
+    WHERE owner_email IS NULL;
+
+CREATE UNIQUE INDEX idx_categorias_owner_nome_unique
+    ON CATEGORIAS (owner_email, nome)
+    WHERE owner_email IS NOT NULL;
+
+CREATE TABLE CATEGORIAS_USUARIO (
+    usuario_email   VARCHAR(255) NOT NULL
+                        REFERENCES USUARIOS(email)
+                        ON DELETE CASCADE,
+    categoria_id    INT NOT NULL
+                        REFERENCES CATEGORIAS(id)
+                        ON DELETE CASCADE,
+    ativo           BOOLEAN NOT NULL DEFAULT TRUE,
+    PRIMARY KEY (usuario_email, categoria_id)
 );
 
 CREATE TABLE PRIORIDADES (
@@ -27,7 +49,21 @@ CREATE TABLE PRIORIDADES (
 CREATE TABLE MOEDAS (
     codigo      CHAR(3) PRIMARY KEY,             -- ISO‑4217
     ativo       BOOLEAN NOT NULL DEFAULT TRUE,
-    is_default  BOOLEAN NOT NULL DEFAULT FALSE
+    is_default  BOOLEAN NOT NULL DEFAULT FALSE,
+    owner_email VARCHAR(255) NULL
+                    REFERENCES USUARIOS(email)
+                    ON DELETE CASCADE
+);
+
+CREATE TABLE MOEDAS_USUARIO (
+    usuario_email   VARCHAR(255) NOT NULL
+                        REFERENCES USUARIOS(email)
+                        ON DELETE CASCADE,
+    moeda_codigo    CHAR(3) NOT NULL
+                        REFERENCES MOEDAS(codigo)
+                        ON DELETE CASCADE,
+    ativo           BOOLEAN NOT NULL DEFAULT TRUE,
+    PRIMARY KEY (usuario_email, moeda_codigo)
 );
 
 CREATE TABLE CONTAS_BANCARIAS (
