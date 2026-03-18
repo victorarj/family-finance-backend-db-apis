@@ -14,7 +14,8 @@ CREATE TABLE USUARIOS (
 CREATE TABLE CATEGORIAS (
     id          SERIAL PRIMARY KEY,
     nome        VARCHAR(100) UNIQUE NOT NULL,
-    ativo       BOOLEAN NOT NULL DEFAULT TRUE
+    ativo       BOOLEAN NOT NULL DEFAULT TRUE,
+    is_default  BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE PRIORIDADES (
@@ -24,7 +25,9 @@ CREATE TABLE PRIORIDADES (
 );
 
 CREATE TABLE MOEDAS (
-    codigo      CHAR(3) PRIMARY KEY              -- ISO‑4217
+    codigo      CHAR(3) PRIMARY KEY,             -- ISO‑4217
+    ativo       BOOLEAN NOT NULL DEFAULT TRUE,
+    is_default  BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE CONTAS_BANCARIAS (
@@ -188,6 +191,8 @@ INSERT INTO CATEGORIAS (nome) VALUES
     ('Utilidades'),
     ('Outros');
 
+UPDATE CATEGORIAS SET is_default = TRUE;
+
 INSERT INTO PRIORIDADES (nome, nivel) VALUES
     ('Baixa', 1),
     ('Média', 2),
@@ -199,6 +204,8 @@ INSERT INTO MOEDAS (codigo) VALUES
     ('BRL'),
     ('EUR'),
     ('GBP');
+
+UPDATE MOEDAS SET is_default = TRUE;
 
 INSERT INTO CONTAS_BANCARIAS (nome_conta, dono_conta, banco, moeda, ativo) VALUES
     ('Conta Principal', 'admin@example.com', 'Banco Brasil', 'BRL', TRUE),

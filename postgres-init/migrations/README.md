@@ -6,6 +6,8 @@ Apply:
 
 `001_extend_schema_planning.sql`
 `002_bank_accounts_management.sql`
+`003_documents_ai.sql`
+`004_global_categories_currencies_lifecycle.sql`
 
 These migrations are non-destructive and extend the legacy schema with planning
 entities, onboarding support, and bank-account lifecycle columns.
@@ -16,6 +18,8 @@ Use:
 
 `001_extend_schema_planning_rollback.sql`
 `002_bank_accounts_management_rollback.sql`
+`003_documents_ai_rollback.sql`
+`004_global_categories_currencies_lifecycle_rollback.sql`
 
 Rollback removes only objects introduced by the forward migration. Existing
 legacy core tables (`USUARIOS`, `DESPESAS`, `RECEITAS`, etc.) remain intact.
