@@ -119,3 +119,22 @@ export async function assertActiveBankAccountOwnership(accountId, ownerEmail) {
   }
   return account;
 }
+
+export async function assertExpenseBankAccountOwnershipForUpdate(
+  accountId,
+  ownerEmail,
+  existingAccountId,
+) {
+  const account = await getBankAccountByIdForOwner(accountId, ownerEmail);
+  if (!account) {
+    const error = new Error("Bank account not found");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!account.ativo && Number(account.id) !== Number(existingAccountId)) {
+    const error = new Error("Inactive bank account cannot be used for new expenses");
+    error.statusCode = 400;
+    throw error;
+  }
+  return account;
+}

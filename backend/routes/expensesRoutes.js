@@ -6,7 +6,10 @@ import {
   getLockedMonthsMap,
   monthFromDate,
 } from "../services/planningService.js";
-import { assertActiveBankAccountOwnership } from "../services/bankAccounts.js";
+import {
+  assertActiveBankAccountOwnership,
+  assertExpenseBankAccountOwnershipForUpdate,
+} from "../services/bankAccounts.js";
 
 const router = express.Router();
 
@@ -123,7 +126,7 @@ router.put("/:id", async (req, res) => {
   try {
     const auth = await resolveAuthUser(req);
     const existing = await pool.query(
-      "SELECT id, dono_despesa, data_inicio FROM DESPESAS WHERE id = $1",
+      "SELECT id, dono_despesa, data_inicio, conta_bancaria_id FROM DESPESAS WHERE id = $1",
       [id],
     );
     if (existing.rows.length === 0) {
@@ -135,7 +138,11 @@ router.put("/:id", async (req, res) => {
 
     await assertMonthIsOpen(auth.id, monthFromDate(existing.rows[0].data_inicio));
     await assertMonthIsOpen(auth.id, monthFromDate(data_inicio));
-    await assertActiveBankAccountOwnership(conta_bancaria_id, auth.email);
+    await assertExpenseBankAccountOwnershipForUpdate(
+      conta_bancaria_id,
+      auth.email,
+      existing.rows[0].conta_bancaria_id,
+    );
 
     const result = await pool.query(
       "UPDATE DESPESAS SET nome = $1, valor_total = $2, valor_mensal = $3, numero_parcelas = $4, data_inicio = $5, data_fim = $6, categoria_id = $7, prioridade_id = $8, debito_bancario = $9, conta_bancaria_id = $10, frequencia_pagamento = $11, descricao = $12, tipo_despesa = $13, dono_despesa = $14, moeda = $15 WHERE id = $16 RETURNING *",

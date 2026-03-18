@@ -7,10 +7,10 @@ router.post("/", async (req, res) => {
   const { nome } = req.body;
   try {
     const result = await pool.query(
-      "INSERT INTO CATEGORIAS (nome) VALUES ($1) RETURNING id",
+      "INSERT INTO CATEGORIAS (nome) VALUES ($1) RETURNING *",
       [nome],
     );
-    res.status(201).json({ id: result.rows[0].id, nome });
+    res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error("Error creating category: ", err);
     res.status(500).json({ error: "database error" });

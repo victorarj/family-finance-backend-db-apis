@@ -42,7 +42,7 @@ services:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
-    command: npm run dev
+    command: node --watch backend/server.js
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -51,7 +51,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - JWT_SECRET=${JWT_SECRET}
       - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - AI_SERVICE_URL=${AI_SERVICE_URL}
+      - AI_SERVICE_URL=${AI_SERVICE_URL_DOCKER:-http://host.docker.internal:8001}
       - INTERNAL_API_SECRET=${INTERNAL_API_SECRET}
       - MINIO_ENDPOINT=http://minio:9000
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
@@ -59,6 +59,11 @@ services:
       - MINIO_BUCKET=${MINIO_BUCKET:-documents}
     ports:
       - "3000:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - .:/app
+      - backend_node_modules:/app/node_modules
     depends_on:
       - postgres
       - minio
@@ -67,3 +72,4 @@ volumes:
   postgres_data:
   pgadmin_data:
   minio_data:
+  backend_node_modules:

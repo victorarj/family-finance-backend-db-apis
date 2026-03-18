@@ -14,6 +14,9 @@ router.post("/", async (req, res) => {
     res.status(201).json({ codigo: result.rows[0].codigo });
   } catch (err) {
     console.error("Error creating currency: ", err);
+    if (err.code === "23505") {
+      return res.status(409).json({ error: "Currency already exists" });
+    }
     res.status(500).json({ error: "database error" });
   }
 });
@@ -42,6 +45,9 @@ router.put("/:codigo", async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
     console.error("Error updating currency: ", err);
+    if (err.code === "23505") {
+      return res.status(409).json({ error: "Currency already exists" });
+    }
     res.status(500).json({ error: "database error" });
   }
 });
